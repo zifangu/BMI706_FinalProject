@@ -5,14 +5,6 @@ import numpy as np
 
 # https://github.com/streamlit/demo-self-driving
 
-def main():
-    st.sidebar.title("BMI 706 Final Project")
-    vis_mode = st.sidebar.selectbox("Choose mode and visualization",
-        ["Show Instructions", "Activities vs. Category", "Show the source code"])
-    if vis_mode == "Show Instructions":
-        instruction_call()
-    elif vis_mode == "Activities vs. Category":
-        run_vis_1()
 
 def instruction_call():
     st.write("Welcome. This product is made possible by April Yan, Ivan Gu, Marie Zhang, and Yuanchen Wang.")
@@ -29,6 +21,15 @@ def run_vis_1():
 
     st.write(category + " selected!")
     return
+
+def main():
+    st.sidebar.title("BMI 706 Final Project")
+    vis_mode = st.sidebar.selectbox("Choose mode and visualization",
+        ["Show Instructions", "Activities vs. Category", "Show the source code"])
+    if vis_mode == "Show Instructions":
+        instruction_call()
+    elif vis_mode == "Activities vs. Category":
+        run_vis_1()
 
 
 if __name__ == "__main__":
