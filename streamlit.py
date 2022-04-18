@@ -8,14 +8,26 @@ import numpy as np
 def main():
     st.sidebar.title("BMI 706 Final Project")
     vis_mode = st.sidebar.selectbox("Choose mode and visualization",
-        ["Instructions", "Visualization 1", "Show the source code"])
-    if vis_mode == "Show instructions":
-        st.sidebar.success("Choose any visualization to view content.")
-    elif vis_mode == "Visualization 1":
+        ["Show Instructions", "Activities vs. Category", "Show the source code"])
+    if vis_mode == "Show Instructions":
+        instruction_call()
+    elif vis_mode == "Activities vs. Category":
         run_vis_1()
 
-def run_vis_1():
+def instruction_call():
+    st.write("Welcome. This product is made possible by April Yan, Ivan Gu, Marie Zhang, and Yuanchen Wang.")
 
+    st.sidebar.success("Choose any visualization to view content.")
+    return
+
+def run_vis_1():
+    # year = st.slider('Select Year', min(df['Year']), max(df['Year']), 2008)
+    activity = st.selectbox('Select Activity',["Calorie", "Choice 2", "Choice 3"])
+    # subset = subset[subset["Cancer"] == cancer]
+
+    category = st.selectbox('Select Categories',["Steps", "Sleep Time", "Choice 3"])
+
+    st.write(category + " selected!")
     return
 
 
