@@ -45,6 +45,10 @@ def run_vis_1():
     st.write(category + " selected!")
     return
 
+def run_vis_2():
+
+    return
+
 def main():
     st.sidebar.title("BMI 706 Final Project")
     vis_mode = st.sidebar.selectbox("Choose mode and visualization",
@@ -57,6 +61,8 @@ def main():
         instruction_call()
     elif vis_mode == "Activities vs. Category":
         run_vis_1()
+    elif vis_mode == "Activities vs. Time":
+        run_vis_2()
 
 
 if __name__ == "__main__":
