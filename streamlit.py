@@ -46,7 +46,7 @@ def run_vis_1():
     return
 
 def run_vis_2():
-
+    # time vs variables
     return
 
 def main():
