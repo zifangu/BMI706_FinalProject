@@ -152,13 +152,17 @@ def run_vis_2():
 
 def run_vis_3():
     processed_data_dir = "ProcessedData"
-    data_dir = "Data"
+    #data_dir = "Data"
     df = pd.read_csv(os.path.join(processed_data_dir,"dailyActivity_weight_merged.csv"),index_col=0)
     df = date_lapse(df)
 
-    data_level = st.selectbox("Select Level of Data",["Within Individual","Between Individuals"])
+    data_level = st.selectbox(label="Select Level of Data", \
+        options=["Between Individuals","Within Individual"], \
+        index=0)
     if data_level == "Within Individual":
-        individuals = st.multiselect("Select individuals",df['Id'].unique())
+        individuals = st.multiselect(label="Select individuals", \
+            options=df['Id'].unique(), \
+            index=0)
         df = df[df['Id'].isin(individuals)]
         x_vars = list(df.columns)
         x_vars.remove('Id')
@@ -166,12 +170,16 @@ def run_vis_3():
         x_vars = list(df.columns)
         x_vars.remove('Id')
     
-    x_var = st.selectbox("Select X variable",x_vars)
+    x_var = st.selectbox(label="Select X variable", \
+        options=x_vars, \
+        index=0)
 
     y_vars = x_vars
     y_vars.remove(x_var)
 
-    y_var = st.selectbox("Select Y variable",y_vars)
+    y_var = st.selectbox(label="Select Y variable", \
+        options=y_vars, \
+        index=0)
 
     scatter = alt.Chart(df).mark_point().encode(
         x=alt.X(x_var),
@@ -180,7 +188,8 @@ def run_vis_3():
         title=f"{y_var} vs. {x_var}"
     )
 
-    st.altair_chart(scatter)
+    scatter
+
     return
 
 def date_lapse(df, date_names=["ActivityDay", "SleepDay", "ActivityDate", "Date"], lapse_name="lapse"):
