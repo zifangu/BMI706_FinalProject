@@ -58,9 +58,10 @@ def run_vis_1():
     # axis_dictionary['activity'] = "Calories"
     y_axis_val = test_df[activity]
 
-    selection = alt.selection_multi(fields=['Quantile'], bind='legend')
+    selection = alt.selection_single(fields=['Quantile'], bind='legend')
+    base = alt.Chart(test_df).transform_filter(selection)
 
-    chart = alt.Chart(test_df).transform_density(
+    chart = base.transform_density(
         activity,
         as_=[activity, 'density'],
         extent=[min(y_axis_val), max(y_axis_val)],
@@ -85,16 +86,39 @@ def run_vis_1():
             ),
         )
     ).properties(
-        width=100
+        width=75,
+        height=200
+    ).add_selection(selection)
+
+    #st.write(selection)
+    #subset = test_df[test_df["Quantile"] == selection]
+
+    #selection_id = alt.selection_multi(fields=['Id'],bind='legend')
+    chart2 = base.mark_line().encode(
+        x = alt.X('ActivityDay'),
+        y = alt.Y('StepTotal'),
+        color = 'Id',#alt.condition(selection_id, 'Id:N', alt.value('lightgray')),
+        tooltip = ['ActivityDay','StepTotal']
+    ).properties(
+        #title=f"{cancer} mortality rates for {'males' if sex == 'M' else 'females'} in {year}",
+        width = 300,
+        height = 200
+    ).add_selection(selection)
+
+    #st.write(category + " selected!")
+
+    chart3 = alt.vconcat(chart, chart2
+    ).resolve_scale(
+        color='independent'
     ).configure_facet(
         spacing=0
     ).configure_view(
         stroke=None
-    ).interactive().add_selection(selection)
+    )
+    
+    # #st.altair_chart(chart, use_container_width=True)
+    st.altair_chart(chart3, use_container_width=True)
 
-    chart
-
-    # st.write(category + " selected!")
     return
 
 def run_vis_2():
