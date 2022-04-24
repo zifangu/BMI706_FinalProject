@@ -13,7 +13,7 @@ import numpy as np
 data_root = "https://raw.githubusercontent.com/qzhang21/BMI706_FinalProject/main/Data/"
 data_dict = {"Activity": "dailyActivity_merged.csv",
             "Calories": "dailyCalories_merged.csv",
-            "Steps": "dailyStep_merged.csv",
+            "Steps": "dailySteps_merged.csv",
             "Sleep": "sleepDay_merged.csv"}
 # call example: data_root + data_dict["Activity"]
 
@@ -53,17 +53,38 @@ def run_vis_1():
 
 def run_vis_2():
     # time vs variables
+    lapse_name="lapse"
     date_names=["ActivityDay", "SleepDay", "ActivityDate", "Date"]
-    var = st.selectbox("Select Variable",["Activity", "Calories", "Steps", "Sleep"])
+
+    df_name = st.selectbox("Select Variable",["Calories", "Steps", "Sleep"])
     # var = st.selectbox("Select Variable", list(data_dict.keys()))
-    df = pd.read_csv(data_root + data_dict["Activity"])
+    if df_name == "Calories":
+        var = "Calories"
+    elif df_name == "Steps":
+        var = "StepTotal"
+    elif df_name == "Sleep":
+        var = st.selectbox(f"Variables in {df_name}", ["TotalMinutesAsleep", "TotalTimeInBed"])
+
+    df = pd.read_csv(data_root + data_dict[df_name])
+    df = date_lapse(df, date_names=date_names, lapse_name=lapse_name)
+
+    chart = alt.Chart(df).mark_line().encode(
+        x=alt.X(lapse_name),
+        y=alt.Y(var),
+        color=alt.Color("Id", type="nominal"),
+        tooltip=[lapse_name, var],
+    ).properties(
+        title="hi",
+    )
+
+    chart
 
     return
 
 def date_lapse(df, date_names=["ActivityDay", "SleepDay", "ActivityDate", "Date"], lapse_name="lapse"):
     # return a df with a new column called "lapse" (or as specified)
     name = np.array(df.columns)[[i in date_names for i in df.columns]][0]
-    df[name] = pd.to_datetime(df_c[name])
+    df[name] = pd.to_datetime(df[name])
     start_dates = {}
     for id, frame in df.sort_values(by=name).groupby("Id"):
         start_dates[id] = frame.iloc[0][name]
