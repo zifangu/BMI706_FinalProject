@@ -82,7 +82,34 @@ def run_vis_2():
     return
 
 def run_vis_3():
+    # time vs variables
+    lapse_name="lapse"
+    date_names=["ActivityDay", "SleepDay", "ActivityDate", "Date"]
 
+    df_name = st.selectbox("Select Variable",["Calories", "Steps", "Sleep"])
+    # var = st.selectbox("Select Variable", list(data_dict.keys()))
+    if df_name == "Calories":
+        var = "Calories"
+    elif df_name == "Steps":
+        var = "StepTotal"
+    elif df_name == "Sleep":
+        var = st.selectbox(f"Variables in {df_name}", ["TotalMinutesAsleep", "TotalTimeInBed"])
+
+    df = pd.read_csv(data_root + data_dict[df_name])
+    df = date_lapse(df, date_names=date_names, lapse_name=lapse_name)
+
+    chart = alt.Chart(df).mark_line().encode(
+        x=alt.X(lapse_name),
+        y=alt.Y(var),
+        color=alt.Color("Id", type="nominal"),
+        tooltip=[lapse_name, var],
+    ).properties(
+        title="hi",
+    )
+
+    chart
+
+    return
 
 def date_lapse(df, date_names=["ActivityDay", "SleepDay", "ActivityDate", "Date"], lapse_name="lapse"):
     # return a df with a new column called "lapse" (or as specified)
