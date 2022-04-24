@@ -1,9 +1,7 @@
-from turtle import width
 import streamlit as st
 import altair as alt
 import pandas as pd
 import numpy as np
-import os
 
 # https://github.com/streamlit/demo-self-driving
 
@@ -27,19 +25,15 @@ def instruction_call():
 
 def run_vis_1():
     # year = st.slider('Select Year', min(df['Year']), max(df['Year']), 2008)
-    activity = st.selectbox('Select Activity',["Calories", "Choice 2", "Choice 3"])
+    activity = st.selectbox('Select Activity',["Calories", "Steps", "Sleep"])
     # subset = subset[subset["Cancer"] == cancer]
 
-    category = st.selectbox('Select Categories',["Steps", "Sleep", "Choice 3"])
+    category = st.selectbox('Select Categories',["Steps", "Sleep Time", "Choice 3"])
     
-    # daily_calories = pd.read_csv("https://raw.githubusercontent.com/qzhang21/BMI706_FinalProject/main/Data/dailyCalories_merged.csv")
-    # daily_steps = pd.read_csv("https://raw.githubusercontent.com/qzhang21/BMI706_FinalProject/main/Data/dailySteps_merged.csv")
-
-    # read in the two files required for the plot
+    #daily_calories = pd.read_csv("https://raw.githubusercontent.com/qzhang21/BMI706_FinalProject/main/Data/dailyCalories_merged.csv")
+    #daily_steps = pd.read_csv("https://raw.githubusercontent.com/qzhang21/BMI706_FinalProject/main/Data/dailySteps_merged.csv")
     daily_activity = pd.read_csv(data_root + data_dict[activity])
     category_var = pd.read_csv(data_root + data_dict[category])
-
-    # merge files
     test_df = daily_activity.merge(category_var, on=["Id", "ActivityDay"]) # merge files
 
     # split the quantiles
@@ -64,9 +58,7 @@ def run_vis_1():
     # axis_dictionary['activity'] = "Calories"
     y_axis_val = test_df[activity]
 
-
     selection = alt.selection_multi(fields=['Quantile'], bind='legend')
-
 
     chart = alt.Chart(test_df).transform_density(
         activity,
@@ -74,17 +66,16 @@ def run_vis_1():
         extent=[min(y_axis_val), max(y_axis_val)],
         groupby=['Quantile']
     ).mark_area(orient='horizontal').encode(
-        y=alt.Y(activity, type="quantitative"),
-        color='Quantile:N',
-        opacity=alt.condition(selection, alt.value(1), alt.value(0.2)),
+        y='Calories:Q',
+        color=alt.condition(selection, 'Quantile:N', alt.value("lightgray")),
+        tooltip = ['Calories'],
         x=alt.X(
             'density:Q',
             stack='center',
             impute=None,
             title=None,
-            axis=alt.Axis(labels=False, values=[0],grid=False, ticks=True),
+            axis=alt.Axis(labels=False, values=[0],grid=False, title=" ")
         ),
-        tooltip=['density:Q'],
         column=alt.Column(
             'Quantile:N',
             header=alt.Header(
@@ -93,19 +84,17 @@ def run_vis_1():
                 labelPadding=0,
             ),
         )
-    ).add_selection(
-        selection
     ).properties(
         width=100
     ).configure_facet(
         spacing=0
     ).configure_view(
         stroke=None
-    )
+    ).interactive().add_selection(selection)
 
-    chart 
+    chart
 
-    st.write(category + " selected!")
+    # st.write(category + " selected!")
     return
 
 def run_vis_2():
@@ -125,62 +114,47 @@ def run_vis_2():
     df = pd.read_csv(data_root + data_dict[df_name])
     df = date_lapse(df, date_names=date_names, lapse_name=lapse_name)
 
-    participants = st.multiselect("Select Participants", np.unique(df["Id"]))
-    df["selected"] = [True if row["Id"] in participants else False for _, row in df.iterrows()]
-
-    scatter = alt.Chart(df).mark_line().encode(
+    chart = alt.Chart(df).mark_line().encode(
         x=alt.X(lapse_name),
         y=alt.Y(var),
-        color=alt.Color("Id", type="nominal", legend=alt.Legend(columns=4)),
+        color=alt.Color("Id", type="nominal"),
         tooltip=[lapse_name, var],
-        opacity = alt.condition(alt.datum.selected, alt.value(0.8), alt.value(0.2))
     ).properties(
-        title=f"{var} by Time",
-        width=800
+        title="hi",
     )
 
-    avg = alt.Chart(df).mark_line(color="gray").encode(
-        x=alt.X(lapse_name),
-        y=alt.Y(f"mean({var})")
-    ).properties(
-        width=800
-    )
-
-    scatter + avg
+    chart
 
     return
 
 def run_vis_3():
-    processed_data_dir = "ProcessedData"
-    data_dir = "Data"
-    df = pd.read_csv(os.path.join(processed_data_dir,"dailyActivity_weight_merged.csv"),index_col=0)
-    df = date_lapse(df)
+    # time vs variables
+    lapse_name="lapse"
+    date_names=["ActivityDay", "SleepDay", "ActivityDate", "Date"]
 
-    data_level = st.selectbox("Select Level of Data",["Within Individual","Between Individuals"])
-    if data_level == "Within Individual":
-        individuals = st.multiselect("Select individuals",df['Id'].unique())
-        df = df[df['Id'].isin(individuals)]
-        x_vars = list(df.columns)
-        x_vars.remove('Id')
-    elif data_level == "Between Individuals":
-        x_vars = list(df.columns)
-        x_vars.remove('Id')
-    
-    x_var = st.selectbox("Select X variable",x_vars)
+    df_name = st.selectbox("Select Variable",["Calories", "Steps", "Sleep"])
+    # var = st.selectbox("Select Variable", list(data_dict.keys()))
+    if df_name == "Calories":
+        var = "Calories"
+    elif df_name == "Steps":
+        var = "StepTotal"
+    elif df_name == "Sleep":
+        var = st.selectbox(f"Variables in {df_name}", ["TotalMinutesAsleep", "TotalTimeInBed"])
 
-    y_vars = x_vars
-    y_vars.remove(x_var)
+    df = pd.read_csv(data_root + data_dict[df_name])
+    df = date_lapse(df, date_names=date_names, lapse_name=lapse_name)
 
-    y_var = st.selectbox("Select Y variable",y_vars)
-
-    scatter = alt.Chart(df).mark_point().encode(
-        x=alt.X(x_var),
-        y=alt.Y(y_var)
+    chart = alt.Chart(df).mark_line().encode(
+        x=alt.X(lapse_name),
+        y=alt.Y(var),
+        color=alt.Color("Id", type="nominal"),
+        tooltip=[lapse_name, var],
     ).properties(
-        title=f"{y_var} vs. {x_var}"
+        title="hi",
     )
 
-    st.altair_chart(scatter)
+    chart
+
     return
 
 def date_lapse(df, date_names=["ActivityDay", "SleepDay", "ActivityDate", "Date"], lapse_name="lapse"):
