@@ -7,16 +7,13 @@ import os
 
 # https://github.com/streamlit/demo-self-driving
 
-# def data_init():
-#     # read in csv
-#     daily_calories = pd.read_csv("https://raw.githubusercontent.com/qzhang21/BMI706_FinalProject/main/dailyCalories_merged.csv")
-#     daily_steps = pd.read_csv("https://raw.githubusercontent.com/qzhang21/BMI706_FinalProject/main/dailySteps_merged.csv")
 
 data_root = "https://raw.githubusercontent.com/qzhang21/BMI706_FinalProject/main/Data/"
 data_dict = {"Activity": "dailyActivity_merged.csv",
             "Calories": "dailyCalories_merged.csv",
             "Steps": "dailySteps_merged.csv",
-            "Sleep": "sleepDay_merged.csv"}
+            "Sleep": "sleepDay_merged.csv",
+            "Intensities": "dailyIntensities_merged.csv"}
 # call example: data_root + data_dict["Activity"]
 
 def instruction_call():
@@ -27,9 +24,12 @@ def instruction_call():
 
 def run_vis_1():
     # year = st.slider('Select Year', min(df['Year']), max(df['Year']), 2008)
-    activity = st.selectbox('Select Activity',["Calories", "Choice 2", "Choice 3"])
-    # subset = subset[subset["Cancer"] == cancer]
+    activity = st.selectbox('Select Activity',["Calories", "Intensities", "Choice 3"])
 
+
+
+    # subset = subset[subset["Cancer"] == cancer]
+    # TODO: Sleep time column is sleepDay, not ActivityDay. Need to conditional merge.
     category = st.selectbox('Select Categories',["Steps", "Sleep", "Choice 3"])
     
     # daily_calories = pd.read_csv("https://raw.githubusercontent.com/qzhang21/BMI706_FinalProject/main/Data/dailyCalories_merged.csv")
@@ -39,6 +39,9 @@ def run_vis_1():
     daily_activity = pd.read_csv(data_root + data_dict[activity])
     category_var = pd.read_csv(data_root + data_dict[category])
 
+    if activity == "Intensities":
+        var = st.selectbox(f"Variables in {activity}", ["TotalMinutesAsleep", "TotalTimeInBed"])
+        
     # merge files
     test_df = daily_activity.merge(category_var, on=["Id", "ActivityDay"]) # merge files
 
