@@ -102,19 +102,29 @@ def run_vis_3():
 
     data_level = st.selectbox("Select Level of Data",["Within Individual","Between Individuals"])
     if data_level == "Within Individual":
-        x_vars = list(df.columns).remove('Id')
+        individuals = st.multiselect("Select individuals",df['Id'].unique())
+        df = df[df['Id'].isin(individuals)]
+        x_vars = list(df.columns)
+        x_vars.remove('Id')
     elif data_level == "Between Individuals":
-        x_vars = list(df.columns).remove('Id')
+        x_vars = list(df.columns)
+        x_vars.remove('Id')
     
     x_var = st.selectbox("Select X variable",x_vars)
 
-    y_vars = df.columns.remove(x_var)
+    y_vars = x_vars
+    y_vars.remove(x_var)
 
     y_var = st.selectbox("Select Y variable",y_vars)
-    
-    st.write(type(df.columns))
 
-    
+    scatter = alt.Chart(df).mark_point().encode(
+        x=alt.X(x_var),
+        y=alt.Y(y_var)
+    ).properties(
+        title=f"{y_var} vs. {x_var}"
+    )
+
+    st.altair_chart(scatter)
     return
 
 def date_lapse(df, date_names=["ActivityDay", "SleepDay", "ActivityDate", "Date"], lapse_name="lapse"):
