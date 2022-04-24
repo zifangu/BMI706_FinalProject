@@ -128,14 +128,15 @@ def run_vis_2():
     df = pd.read_csv(data_root + data_dict[df_name])
     df = date_lapse(df, date_names=date_names, lapse_name=lapse_name)
 
-    participant = st.multiselect("Select Participants", np.array(np.unique(df["Id"]), dtype='str'))
+    participants = st.multiselect("Select Participants", np.unique(df["Id"]))
+    df["selected"] = [True if row["Id"] in participants else False for _, row in df.iterrows()]
 
     scatter = alt.Chart(df).mark_line().encode(
         x=alt.X(lapse_name),
         y=alt.Y(var),
         color=alt.Color("Id", type="nominal", legend=alt.Legend(columns=4)),
         tooltip=[lapse_name, var],
-        opacity = alt.value(0.2)
+        opacity = alt.condition(alt.datum.selected, alt.value(0.8), alt.value(0.2))
     ).properties(
         title=f"{var} by Time",
         width=800
@@ -154,25 +155,44 @@ def run_vis_2():
 
 def run_vis_3():
     processed_data_dir = "ProcessedData"
-    data_dir = "Data"
+    #data_dir = "Data"
     df = pd.read_csv(os.path.join(processed_data_dir,"dailyActivity_weight_merged.csv"),index_col=0)
     df = date_lapse(df)
 
-    data_level = st.selectbox("Select Level of Data",["Within Individual","Between Individuals"])
+    data_level = st.selectbox(label="Select Level of Data", \
+        options=["Between Individuals","Within Individual"], \
+        index=0)
     if data_level == "Within Individual":
-        x_vars = list(df.columns).remove('Id')
+        individuals = st.multiselect(label="Select individuals", \
+            options=df['Id'].unique(), \
+            index=0)
+        df = df[df['Id'].isin(individuals)]
+        x_vars = list(df.columns)
+        x_vars.remove('Id')
     elif data_level == "Between Individuals":
-        x_vars = list(df.columns).remove('Id')
+        x_vars = list(df.columns)
+        x_vars.remove('Id')
     
-    x_var = st.selectbox("Select X variable",x_vars)
+    x_var = st.selectbox(label="Select X variable", \
+        options=x_vars, \
+        index=0)
 
-    y_vars = df.columns.remove(x_var)
+    y_vars = x_vars
+    y_vars.remove(x_var)
 
-    y_var = st.selectbox("Select Y variable",y_vars)
-    
-    st.write(type(df.columns))
+    y_var = st.selectbox(label="Select Y variable", \
+        options=y_vars, \
+        index=0)
 
-    
+    scatter = alt.Chart(df).mark_point().encode(
+        x=alt.X(x_var),
+        y=alt.Y(y_var)
+    ).properties(
+        title=f"{y_var} vs. {x_var}"
+    )
+
+    scatter
+
     return
 
 def date_lapse(df, date_names=["ActivityDay", "SleepDay", "ActivityDate", "Date"], lapse_name="lapse"):
