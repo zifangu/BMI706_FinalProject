@@ -69,14 +69,15 @@ def run_vis_2():
     df = pd.read_csv(data_root + data_dict[df_name])
     df = date_lapse(df, date_names=date_names, lapse_name=lapse_name)
 
-    participant = st.multiselect("Select Participants", np.array(np.unique(df["Id"]), dtype='str'))
+    participants = st.multiselect("Select Participants", np.unique(df["Id"]))
+    df["selected"] = [True if row["Id"] in participants else False for _, row in df.iterrows()]
 
     scatter = alt.Chart(df).mark_line().encode(
         x=alt.X(lapse_name),
         y=alt.Y(var),
         color=alt.Color("Id", type="nominal", legend=alt.Legend(columns=4)),
         tooltip=[lapse_name, var],
-        opacity = alt.value(0.2)
+        opacity = alt.condition(alt.datum.selected, alt.value(0.8), alt.value(0.2))
     ).properties(
         title=f"{var} by Time",
         width=800
