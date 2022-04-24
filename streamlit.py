@@ -14,7 +14,7 @@ data_root = "https://raw.githubusercontent.com/qzhang21/BMI706_FinalProject/main
 data_dict = {"Activity": "dailyActivity_merged.csv",
             "Calories": "dailyCalories_merged.csv",
             "Steps": "dailyStep_merged.csv",
-            "Sleep": "sleepDay.csv"}
+            "Sleep": "sleepDay_merged.csv"}
 # call example: data_root + data_dict["Activity"]
 
 def instruction_call():
@@ -54,7 +54,8 @@ def run_vis_1():
 def run_vis_2():
     # time vs variables
     date_names=["ActivityDay", "SleepDay", "ActivityDate", "Date"]
-
+    var = st.selectbox("Select Variable",["Activity", "Calories", "Steps", "Sleep"])
+    # var = st.selectbox("Select Variable", list(data_dict.keys()))
     df = pd.read_csv(data_root + data_dict["Activity"])
 
     return
@@ -72,7 +73,7 @@ def date_lapse(df, date_names=["ActivityDay", "SleepDay", "ActivityDate", "Date"
 def main():
     st.sidebar.title("BMI 706 Final Project")
     vis_mode = st.sidebar.selectbox("Choose mode and visualization",
-        ["Show Instructions", "Activities vs. Category", "Show the source code"])
+        ["Show Instructions", "Activities vs. Category", "Activities vs. Time", "Show the source code"])
 
     # initialize data
     # data_init()
