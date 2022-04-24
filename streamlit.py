@@ -1,3 +1,4 @@
+from turtle import width
 import streamlit as st
 import altair as alt
 import pandas as pd
@@ -68,16 +69,27 @@ def run_vis_2():
     df = pd.read_csv(data_root + data_dict[df_name])
     df = date_lapse(df, date_names=date_names, lapse_name=lapse_name)
 
-    chart = alt.Chart(df).mark_line().encode(
+    participant = st.multiselect("Select Participants", np.array(np.unique(df["Id"]), dtype='str'))
+
+    scatter = alt.Chart(df).mark_line().encode(
         x=alt.X(lapse_name),
         y=alt.Y(var),
-        color=alt.Color("Id", type="nominal"),
+        color=alt.Color("Id", type="nominal", legend=alt.Legend(columns=4)),
         tooltip=[lapse_name, var],
+        opacity = alt.value(0.2)
     ).properties(
-        title="hi",
+        title=f"{var} by Time",
+        width=800
     )
 
-    chart
+    avg = alt.Chart(df).mark_line(color="gray").encode(
+        x=alt.X(lapse_name),
+        y=alt.Y(f"mean({var})")
+    ).properties(
+        width=800
+    )
+
+    scatter + avg
 
     return
 
