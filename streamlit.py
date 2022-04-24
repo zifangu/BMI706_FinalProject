@@ -11,7 +11,11 @@ import numpy as np
 #     daily_steps = pd.read_csv("https://raw.githubusercontent.com/qzhang21/BMI706_FinalProject/main/dailySteps_merged.csv")
 
 data_root = "https://raw.githubusercontent.com/qzhang21/BMI706_FinalProject/main/Data/"
-data_dict = {}
+data_dict = {"Activity": "dailyActivity_merged.csv",
+            "Calories": "dailyCalories_merged.csv",
+            "Steps": "dailyStep_merged.csv",
+            "Sleep": "sleepDay.csv"}
+# call example: data_root + data_dict["Activity"]
 
 def instruction_call():
     st.write("Welcome. This product is made possible by April Yan, Ivan Gu, Marie Zhang, and Yuanchen Wang.")
@@ -51,6 +55,7 @@ def run_vis_2():
     # time vs variables
     date_names=["ActivityDay", "SleepDay", "ActivityDate", "Date"]
 
+    df = pd.read_csv(data_root + data_dict["Activity"])
 
     return
 
