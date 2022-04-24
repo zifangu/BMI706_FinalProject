@@ -24,23 +24,24 @@ def instruction_call():
 
 def run_vis_1():
     # year = st.slider('Select Year', min(df['Year']), max(df['Year']), 2008)
-    activity = st.selectbox('Select Activity',["Calories", "Intensities", "Choice 3"])
+    activity = st.selectbox('Select Activity',["Calories", "Intensities"])
+    var = activity
 
-
+    # read in the a file required for the plot
+    daily_activity = pd.read_csv(data_root + data_dict[activity])
+    if activity == "Intensities":
+        var = st.selectbox(f"Variables in {activity}", daily_activity.columns.to_list()[2:])
+        daily_activity = daily_activity[['Id', 'ActivityDay', var]]
 
     # subset = subset[subset["Cancer"] == cancer]
     # TODO: Sleep time column is sleepDay, not ActivityDay. Need to conditional merge.
     category = st.selectbox('Select Categories',["Steps", "Sleep", "Choice 3"])
+    category_var = pd.read_csv(data_root + data_dict[category])
     
     # daily_calories = pd.read_csv("https://raw.githubusercontent.com/qzhang21/BMI706_FinalProject/main/Data/dailyCalories_merged.csv")
     # daily_steps = pd.read_csv("https://raw.githubusercontent.com/qzhang21/BMI706_FinalProject/main/Data/dailySteps_merged.csv")
 
-    # read in the two files required for the plot
-    daily_activity = pd.read_csv(data_root + data_dict[activity])
-    category_var = pd.read_csv(data_root + data_dict[category])
 
-    if activity == "Intensities":
-        var = st.selectbox(f"Variables in {activity}", ["TotalMinutesAsleep", "TotalTimeInBed"])
         
     # merge files
     test_df = daily_activity.merge(category_var, on=["Id", "ActivityDay"]) # merge files
@@ -63,21 +64,23 @@ def run_vis_1():
     test_df.loc[index_q3, 'Quantile'] = "Q3"
     test_df.loc[index_q4, 'Quantile'] = "Q4"
 
+    # # special case for non-intensities
+    # if activity != "Intensities": var = activity
     # axis_dictionary = dict()
     # axis_dictionary['activity'] = "Calories"
-    y_axis_val = test_df[activity]
+    y_axis_val = test_df[var]
 
 
     selection = alt.selection_multi(fields=['Quantile'], bind='legend')
 
 
     chart = alt.Chart(test_df).transform_density(
-        activity,
-        as_=[activity, 'density'],
+        var,
+        as_=[var, 'density'],
         extent=[min(y_axis_val), max(y_axis_val)],
         groupby=['Quantile']
     ).mark_area(orient='horizontal').encode(
-        y=alt.Y(activity, type="quantitative"),
+        y=alt.Y(var, type="quantitative"),
         color='Quantile:N',
         opacity=alt.condition(selection, alt.value(1), alt.value(0.2)),
         x=alt.X(
