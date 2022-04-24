@@ -165,40 +165,83 @@ def run_vis_3():
     df = pd.read_csv(os.path.join(processed_data_dir,"dailyActivity_weight_merged.csv"),index_col=0)
     df = date_lapse(df)
 
-    data_level = st.selectbox(label="Select Level of Data", \
-        options=["Between Individuals","Within Individual"], \
-        index=0)
-    if data_level == "Within Individual":
-        individuals = st.multiselect(label="Select individuals", \
-            options=df['Id'].unique(), \
-            index=0)
-        df = df[df['Id'].isin(individuals)]
-        x_vars = list(df.columns)
-        x_vars.remove('Id')
-    elif data_level == "Between Individuals":
-        x_vars = list(df.columns)
-        x_vars.remove('Id')
+    distance_vars = ["TotalSteps",
+        "TotalDistance",
+        "TrackerDistance",
+        "LoggedActivitiesDistance",
+        "VeryActiveDistance",
+        "ModeratelyActiveDistance",
+        "LightActiveDistance",
+        "SedentaryActiveDistance"]
     
-    x_var = st.selectbox(label="Select X variable", \
-        options=x_vars, \
+    time_vars = ["VeryActiveMinutes",
+        "FairlyActiveMinutes",
+        "LightlyActiveMinutes",
+        "SedentaryMinutes"]
+
+    y_vars_between = ["BMI",
+        "Calories",
+        "WeightKg"]
+    y_var_within = "Calories"
+
+    individuals = st.multiselect(label="Select individuals",
+        options=df['Id'].unique())
+    df_within = df[df['Id'].isin(individuals)]
+    
+    distance_var = st.selectbox(label="Select distance variable",
+        options=distance_vars,
         index=0)
-
-    y_vars = x_vars
-    y_vars.remove(x_var)
-
-    y_var = st.selectbox(label="Select Y variable", \
-        options=y_vars, \
+    time_var = st.selectbox(label="Select time variable",
+        options=time_vars,
         index=0)
-
-    scatter = alt.Chart(df).mark_point().encode(
-        x=alt.X(x_var),
-        y=alt.Y(y_var)
+    y_var_between = st.selectbox(label="Select Y variable for comparison between individuals",
+        options=y_vars_between,
+        index=0)
+    
+    # plots for distance
+    scatter_btwn_dist = alt.Chart(df).mark_point().encode(
+        x=alt.X(distance_var),
+        y=alt.Y(y_var_between)
     ).properties(
-        title=f"{y_var} vs. {x_var}"
+        title=f"{y_var_between} vs. {distance_var} (Between Individuals)"
     )
+    reg_btwn_dist = scatter_btwn_dist.transform_regression(distance_var,y_var_between).mark_line(
+        color="red"
+    )
+    scatter_wthn_dist = alt.Chart(df_within).mark_point().encode(
+        x=alt.X(distance_var),
+        y=alt.Y(y_var_within)
+    ).properties(
+        title=f"{y_var_within} vs. {distance_var}"
+    )
+    reg_wthn_dist = scatter_wthn_dist.transform_regression(distance_var,y_var_within).mark_line(
+        color="red"
+    )
+    disp_plot_dist = scatter_btwn_dist + reg_btwn_dist | scatter_wthn_dist + reg_wthn_dist
 
-    scatter
+    # plots for time
+    scatter_btwn_time = alt.Chart(df).mark_point().encode(
+        x=alt.X(time_var),
+        y=alt.Y(y_var_between)
+    ).properties(
+        title=f"{y_var_between} vs. {time_var} (Between Individuals)"
+    )
+    reg_btwn_time = scatter_btwn_time.transform_regression(time_var,y_var_between).mark_line(
+        color="red"
+    )
+    scatter_wthn_time = alt.Chart(df_within).mark_point().encode(
+        x=alt.X(time_var),
+        y=alt.Y(y_var_within)
+    ).properties(
+        title=f"{y_var_within} vs. {time_var}"
+    )
+    reg_wthn_time = scatter_wthn_time.transform_regression(time_var,y_var_within).mark_line(
+        color="red"
+    )
+    disp_plot_time = scatter_btwn_time + reg_btwn_time | scatter_wthn_time + reg_wthn_time
 
+    final_plot = alt.vconcat(disp_plot_dist, disp_plot_time)
+    final_plot
     return
 
 def date_lapse(df, date_names=["ActivityDay", "SleepDay", "ActivityDate", "Date"], lapse_name="lapse"):
