@@ -81,6 +81,9 @@ def run_vis_2():
 
     return
 
+def run_vis_3():
+
+
 def date_lapse(df, date_names=["ActivityDay", "SleepDay", "ActivityDate", "Date"], lapse_name="lapse"):
     # return a df with a new column called "lapse" (or as specified)
     name = np.array(df.columns)[[i in date_names for i in df.columns]][0]
@@ -94,7 +97,11 @@ def date_lapse(df, date_names=["ActivityDay", "SleepDay", "ActivityDate", "Date"
 def main():
     st.sidebar.title("BMI 706 Final Project")
     vis_mode = st.sidebar.selectbox("Choose mode and visualization",
-        ["Show Instructions", "Activities vs. Category", "Activities vs. Time", "Show the source code"])
+        ["Show Instructions",
+        "Activities vs. Category",
+        "Activities vs. Time",
+        "Correlations",
+        "Show the source code"])
 
     # initialize data
     # data_init()
@@ -105,6 +112,8 @@ def main():
         run_vis_1()
     elif vis_mode == "Activities vs. Time":
         run_vis_2()
+    elif vis_mode == "Correlations":
+        run_vis_3()
 
 
 if __name__ == "__main__":
