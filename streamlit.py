@@ -37,6 +37,9 @@ def run_vis_1():
     # TODO: Sleep time column is sleepDay, not ActivityDay. Need to conditional merge.
     category = st.selectbox('Select Categories',["Steps", "Sleep", "Choice 3"])
     category_var = pd.read_csv(data_root + data_dict[category])
+    if category == "Sleep":
+        var = st.selectbox(f"Variables in {category}", category_var.columns.to_list()[3:])
+        daily_activity = daily_activity[['Id', 'ActivityDay', var]]
     
     # daily_calories = pd.read_csv("https://raw.githubusercontent.com/qzhang21/BMI706_FinalProject/main/Data/dailyCalories_merged.csv")
     # daily_steps = pd.read_csv("https://raw.githubusercontent.com/qzhang21/BMI706_FinalProject/main/Data/dailySteps_merged.csv")
