@@ -24,8 +24,8 @@ def run_vis_1():
 
     category = st.selectbox('Select Categories',["Steps", "Sleep Time", "Choice 3"])
     
-    daily_calories = pd.read_csv("https://raw.githubusercontent.com/qzhang21/BMI706_FinalProject/main/dailyCalories_merged.csv")
-    daily_steps = pd.read_csv("https://raw.githubusercontent.com/qzhang21/BMI706_FinalProject/main/dailySteps_merged.csv")
+    daily_calories = pd.read_csv("https://raw.githubusercontent.com/qzhang21/BMI706_FinalProject/main/Data/dailyCalories_merged.csv")
+    daily_steps = pd.read_csv("https://raw.githubusercontent.com/qzhang21/BMI706_FinalProject/main/Data/dailySteps_merged.csv")
 
     test_df = daily_calories.merge(daily_steps, on=["Id", "ActivityDay"]) # merge files
 
