@@ -47,9 +47,20 @@ def run_vis_1():
 
 def run_vis_2():
     # time vs variables
-    
+    date_names=["ActivityDay", "SleepDay", "ActivityDate", "Date"]
+
 
     return
+
+def date_lapse(df, date_names=["ActivityDay", "SleepDay", "ActivityDate", "Date"], lapse_name="lapse"):
+    # return a df with a new column called "lapse" (or as specified)
+    name = np.array(df.columns)[[i in date_names for i in df.columns]][0]
+    df[name] = pd.to_datetime(df_c[name])
+    start_dates = {}
+    for id, frame in df.sort_values(by=name).groupby("Id"):
+        start_dates[id] = frame.iloc[0][name]
+    df[lapse_name] = [(row[name] - start_dates[row["Id"]]).days  for _, row in df.iterrows()]
+    return df
 
 def main():
     st.sidebar.title("BMI 706 Final Project")
