@@ -10,6 +10,8 @@ import numpy as np
 #     daily_calories = pd.read_csv("https://raw.githubusercontent.com/qzhang21/BMI706_FinalProject/main/dailyCalories_merged.csv")
 #     daily_steps = pd.read_csv("https://raw.githubusercontent.com/qzhang21/BMI706_FinalProject/main/dailySteps_merged.csv")
 
+data_root = "https://raw.githubusercontent.com/qzhang21/BMI706_FinalProject/main/Data/"
+data_dict = {}
 
 def instruction_call():
     st.write("Welcome. This product is made possible by April Yan, Ivan Gu, Marie Zhang, and Yuanchen Wang.")
