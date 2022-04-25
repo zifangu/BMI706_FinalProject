@@ -1,10 +1,12 @@
 from turtle import color, width
+
+from pyparsing import oneOf
 import streamlit as st
 import altair as alt
 import pandas as pd
 import numpy as np
 import os
-from scipy import stats
+# from scipy import stats
 
 # https://github.com/streamlit/demo-self-driving
 
@@ -101,7 +103,7 @@ def run_vis_1():
 
     # y_axis_val = test_df[activity]
 
-    selection = alt.selection_single(fields=['Quantile'], bind='legend')
+    selection = alt.selection_single(fields=['Quantile'])
     base = alt.Chart(test_df).transform_filter(selection)
 
     chart = alt.Chart(test_df).transform_density(
@@ -159,7 +161,7 @@ def run_vis_1():
     )
     
     # #st.altair_chart(chart, use_container_width=True)
-    st.write("Steps Quantile")
+    st.write(f"{var_cat} Quantile")
     st.write("min:",min_cat,"25%:",q1,"50%:",q2,"75%:",q3,"max:",max_cat)
     st.altair_chart(chart3, use_container_width=True)
 
