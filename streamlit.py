@@ -54,9 +54,9 @@ def run_vis_1():
 
     # split the quantiles
     quantile_df = test_df.quantile(q=[0, .25, 0.50, 0.75, 1], axis = 0)
-    q1 = float(quantile_df.iloc[0, [-1]])
-    q2 = float(quantile_df.iloc[1, [-1]])
-    q3 = float(quantile_df.iloc[2, [-1]])
+    q1 = float(quantile_df.iloc[1, [-1]])
+    q2 = float(quantile_df.iloc[2, [-1]])
+    q3 = float(quantile_df.iloc[3, [-1]])
     min_cat = float(quantile_df.iloc[0, [-1]])
     max_cat = float(quantile_df.iloc[4, [-1]])
     # second plot, also plot Q1,2,3,4. This is to show how many days do individuals are within the quantiles
