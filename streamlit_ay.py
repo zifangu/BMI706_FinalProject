@@ -23,57 +23,102 @@ def instruction_call():
     st.sidebar.success("Choose any visualization to view content.")
     return
 
-    def run_vis_1():
-        # year = st.slider('Select Year', min(df['Year']), max(df['Year']), 2008)
-        activity = st.selectbox('Select Activity',["Calories", "Steps", "Sleep"])
-        # subset = subset[subset["Cancer"] == cancer]
+def run_vis_1():
+    # year = st.slider('Select Year', min(df['Year']), max(df['Year']), 2008)
+    activity = st.selectbox('Select Activity',["Calories", "Steps", "Sleep"])
+    # subset = subset[subset["Cancer"] == cancer]
 
-        category = st.selectbox('Select Categories',["Steps", "Sleep Time", "Choice 3"])
-        
-        daily_calories = pd.read_csv("https://raw.githubusercontent.com/qzhang21/BMI706_FinalProject/main/Data/dailyCalories_merged.csv")
-        daily_steps = pd.read_csv("https://raw.githubusercontent.com/qzhang21/BMI706_FinalProject/main/Data/dailySteps_merged.csv")
+    category = st.selectbox('Select Categories',["Steps", "Sleep Time", "Choice 3"])
+    
+    #daily_calories = pd.read_csv("https://raw.githubusercontent.com/qzhang21/BMI706_FinalProject/main/Data/dailyCalories_merged.csv")
+    #daily_steps = pd.read_csv("https://raw.githubusercontent.com/qzhang21/BMI706_FinalProject/main/Data/dailySteps_merged.csv")
+    daily_activity = pd.read_csv(data_root + data_dict[activity])
+    category_var = pd.read_csv(data_root + data_dict[category])
+    test_df = daily_activity.merge(category_var, on=["Id", "ActivityDay"]) # merge files
 
-        test_df = daily_calories.merge(daily_steps, on=["Id", "ActivityDay"]) # merge files
+    # split the quantiles
+    quantile_df = test_df.quantile(q=[.25, 0.50, 0.75], axis = 0)
+    q1 = float(quantile_df.iloc[0, [-1]])
+    q2 = float(quantile_df.iloc[1, [-1]])
+    q3 = float(quantile_df.iloc[2, [-1]])
+    # second plot, also plot Q1,2,3,4. This is to show how many days do individuals are within the quantiles
+    index_q1 = np.where(test_df.iloc[:, [-1]] < q1)[0] # gets the index of the df matching the condition. [0] to get the index
+    index_q2 = np.where((test_df.iloc[:, [-1]] >= q1) & (test_df.iloc[:, [-1]] < q2))[0]
+    index_q3 = np.where((test_df.iloc[:, [-1]] >= q2) & (test_df.iloc[:, [-1]] < q3))[0]
+    index_q4 = np.where(test_df.iloc[:, [-1]] >= q3)[0]
 
+    # assign quantiles
+    test_df['Quantile'] = None
+    test_df.loc[index_q1, 'Quantile'] = "Q1"
+    test_df.loc[index_q2, 'Quantile'] = "Q2"
+    test_df.loc[index_q3, 'Quantile'] = "Q3"
+    test_df.loc[index_q4, 'Quantile'] = "Q4"
 
+    # axis_dictionary = dict()
+    # axis_dictionary['activity'] = "Calories"
+    y_axis_val = test_df[activity]
 
-        selection = alt.selection_multi(fields=['Quantile'], bind='legend')
+    selection = alt.selection_single(fields=['Quantile'], bind='legend')
+    base = alt.Chart(test_df).transform_filter(selection)
 
-        Chart = alt.Chart(test_df).transform_density(
-            'Calories',
-            as_=['Calories', 'density'],
-            extent=[min(test_df['Calories']), max(test_df['Calories'])],
-            groupby=['Quantile']
-        ).mark_area(orient='horizontal').encode(
-            y='Calories:Q',
-            color=alt.condition(selection, 'Quantile:N', alt.value("lightgray")),
-            tooltip = ['Calories'],
-            x=alt.X(
-                'density:Q',
-                stack='center',
-                impute=None,
-                title=None,
-                axis=alt.Axis(labels=False, values=[0],grid=False, title=" ")
+    chart = base.transform_density(
+        activity,
+        as_=[activity, 'density'],
+        extent=[min(y_axis_val), max(y_axis_val)],
+        groupby=['Quantile']
+    ).mark_area(orient='horizontal').encode(
+        y='Calories:Q',
+        color=alt.condition(selection, 'Quantile:N', alt.value("lightgray")),
+        tooltip = ['Calories'],
+        x=alt.X(
+            'density:Q',
+            stack='center',
+            impute=None,
+            title=None,
+            axis=alt.Axis(labels=False, values=[0],grid=False, title=" ")
+        ),
+        column=alt.Column(
+            'Quantile:N',
+            header=alt.Header(
+                titleOrient='bottom',
+                labelOrient='bottom',
+                labelPadding=0,
             ),
-            column=alt.Column(
-                'Quantile:N',
-                header=alt.Header(
-                    titleOrient='bottom',
-                    labelOrient='bottom',
-                    labelPadding=0,
-                ),
-            )
-        ).properties(
-            width=100
-        ).configure_facet(
-            spacing=0
-        ).configure_view(
-            stroke=None
-        ).interactive().add_selection(selection)
+        )
+    ).properties(
+        width=75,
+        height=200
+    ).add_selection(selection)
 
-        chart
+    #st.write(selection)
+    #subset = test_df[test_df["Quantile"] == selection]
 
-    # st.write(category + " selected!")
+    #selection_id = alt.selection_multi(fields=['Id'],bind='legend')
+    chart2 = base.mark_line().encode(
+        x = alt.X('ActivityDay'),
+        y = alt.Y('StepTotal'),
+        color = 'Id',#alt.condition(selection_id, 'Id:N', alt.value('lightgray')),
+        tooltip = ['ActivityDay','StepTotal']
+    ).properties(
+        #title=f"{cancer} mortality rates for {'males' if sex == 'M' else 'females'} in {year}",
+        width = 300,
+        height = 200
+    ).add_selection(selection)
+
+    #st.write(category + " selected!")
+
+    chart3 = alt.vconcat(chart, chart2
+    ).resolve_scale(
+        color='independent'
+    ).configure_facet(
+        spacing=0
+    ).configure_view(
+        stroke=None
+    )
+    
+    # #st.altair_chart(chart, use_container_width=True)
+    st.altair_chart(chart3, use_container_width=True)
+
     return
 
 def run_vis_2():

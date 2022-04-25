@@ -7,17 +7,14 @@ import os
 
 # https://github.com/streamlit/demo-self-driving
 
-# def data_init():
-#     # read in csv
-#     daily_calories = pd.read_csv("https://raw.githubusercontent.com/qzhang21/BMI706_FinalProject/main/dailyCalories_merged.csv")
-#     daily_steps = pd.read_csv("https://raw.githubusercontent.com/qzhang21/BMI706_FinalProject/main/dailySteps_merged.csv")
 
 data_root = "https://raw.githubusercontent.com/qzhang21/BMI706_FinalProject/main/Data/"
 data_dict = {"Activity": "dailyActivity_merged.csv",
-             "Calories": "dailyCalories_merged.csv",
-             "Steps": "dailySteps_merged.csv",
-             "Sleep": "sleepDay_merged.csv",
-             "Weight": "weightLogInfo_merged.csv"}
+            "Calories": "dailyCalories_merged.csv",
+            "Steps": "dailySteps_merged.csv",
+            "Sleep": "sleepDay_merged.csv",
+            "Intensities": "dailyIntensities_merged.csv",
+            "Weight": "weightLogInfo_merged.csv"}
 # call example: data_root + data_dict["Activity"]
 
 
@@ -30,20 +27,28 @@ def instruction_call():
 
 def run_vis_1():
     # year = st.slider('Select Year', min(df['Year']), max(df['Year']), 2008)
-    activity = st.selectbox(
-        'Select Activity', ["Calories", "Choice 2", "Choice 3"])
+    activity = st.selectbox('Select Activity',["Calories", "Intensities"])
+    var = activity
+
+    # read in the a file required for the plot
+    daily_activity = pd.read_csv(data_root + data_dict[activity])
+    if activity == "Intensities":
+        var = st.selectbox(f"Variables in {activity}", daily_activity.columns.to_list()[2:])
+        daily_activity = daily_activity[['Id', 'ActivityDay', var]]
+
     # subset = subset[subset["Cancer"] == cancer]
-
-    category = st.selectbox('Select Categories', [
-                            "Steps", "Sleep", "Choice 3"])
-
+    # TODO: Sleep time column is sleepDay, not ActivityDay. Need to conditional merge.
+    category = st.selectbox('Select Categories',["Steps", "Sleep", "Choice 3"])
+    category_var = pd.read_csv(data_root + data_dict[category])
+    if category == "Sleep":
+        var = st.selectbox(f"Variables in {category}", category_var.columns.to_list()[3:])
+        daily_activity = daily_activity[['Id', 'ActivityDay', var]]
+    
     # daily_calories = pd.read_csv("https://raw.githubusercontent.com/qzhang21/BMI706_FinalProject/main/Data/dailyCalories_merged.csv")
     # daily_steps = pd.read_csv("https://raw.githubusercontent.com/qzhang21/BMI706_FinalProject/main/Data/dailySteps_merged.csv")
 
-    # read in the two files required for the plot
-    daily_activity = pd.read_csv(data_root + data_dict[activity])
-    category_var = pd.read_csv(data_root + data_dict[category])
 
+        
     # merge files
     test_df = daily_activity.merge(
         category_var, on=["Id", "ActivityDay"])  # merge files
@@ -69,19 +74,21 @@ def run_vis_1():
     test_df.loc[index_q3, 'Quantile'] = "Q3"
     test_df.loc[index_q4, 'Quantile'] = "Q4"
 
+    # # special case for non-intensities
+    # if activity != "Intensities": var = activity
     # axis_dictionary = dict()
     # axis_dictionary['activity'] = "Calories"
-    y_axis_val = test_df[activity]
+    y_axis_val = test_df[var]
 
     selection = alt.selection_multi(fields=['Quantile'], bind='legend')
 
     chart = alt.Chart(test_df).transform_density(
-        activity,
-        as_=[activity, 'density'],
+        var,
+        as_=[var, 'density'],
         extent=[min(y_axis_val), max(y_axis_val)],
         groupby=['Quantile']
     ).mark_area(orient='horizontal').encode(
-        y=alt.Y(activity, type="quantitative"),
+        y=alt.Y(var, type="quantitative"),
         color='Quantile:N',
         opacity=alt.condition(selection, alt.value(1), alt.value(0.2)),
         x=alt.X(
@@ -205,33 +212,94 @@ def run_vis_2():
 
 def run_vis_3():
     processed_data_dir = "ProcessedData"
-    data_dir = "Data"
-    df = pd.read_csv(os.path.join(processed_data_dir,
-                     "dailyActivity_weight_merged.csv"), index_col=0)
+    #data_dir = "Data"
+    df = pd.read_csv(os.path.join(processed_data_dir,"dailyActivity_weight_merged.csv"),index_col=0)
     df = date_lapse(df)
 
-    data_level = st.selectbox("Select Level of Data", [
-                              "Within Individual", "Between Individuals"])
-    if data_level == "Within Individual":
-        x_vars = list(df.columns).remove('Id')
-    elif data_level == "Between Individuals":
-        x_vars = list(df.columns).remove('Id')
+    distance_vars = ["TotalSteps",
+        "TotalDistance",
+        "TrackerDistance",
+        "LoggedActivitiesDistance",
+        "VeryActiveDistance",
+        "ModeratelyActiveDistance",
+        "LightActiveDistance",
+        "SedentaryActiveDistance"]
+    
+    time_vars = ["VeryActiveMinutes",
+        "FairlyActiveMinutes",
+        "LightlyActiveMinutes",
+        "SedentaryMinutes"]
 
-    x_var = st.selectbox("Select X variable", x_vars)
+    y_vars_between = ["BMI",
+        "Calories",
+        "WeightKg"]
+    y_var_within = "Calories"
 
-    y_vars = df.columns.remove(x_var)
+    individuals = st.multiselect(label="Select individuals",
+        options=df['Id'].unique())
+    df_within = df[df['Id'].isin(individuals)]
+    
+    distance_var = st.selectbox(label="Select distance variable",
+        options=distance_vars,
+        index=0)
+    time_var = st.selectbox(label="Select time variable",
+        options=time_vars,
+        index=0)
+    y_var_between = st.selectbox(label="Select Y variable for comparison between individuals",
+        options=y_vars_between,
+        index=0)
+    
+    # plots for distance
+    scatter_btwn_dist = alt.Chart(df).mark_point().encode(
+        x=alt.X(distance_var),
+        y=alt.Y(y_var_between)
+    ).properties(
+        title=f"{y_var_between} vs. {distance_var} (Between Individuals)"
+    )
+    reg_btwn_dist = scatter_btwn_dist.transform_regression(distance_var,y_var_between).mark_line(
+        color="red"
+    )
+    scatter_wthn_dist = alt.Chart(df_within).mark_point().encode(
+        x=alt.X(distance_var),
+        y=alt.Y(y_var_within)
+    ).properties(
+        title=f"{y_var_within} vs. {distance_var}"
+    )
+    reg_wthn_dist = scatter_wthn_dist.transform_regression(distance_var,y_var_within).mark_line(
+        color="red"
+    )
+    disp_plot_dist = scatter_btwn_dist + reg_btwn_dist | scatter_wthn_dist + reg_wthn_dist
 
-    y_var = st.selectbox("Select Y variable", y_vars)
+    # plots for time
+    scatter_btwn_time = alt.Chart(df).mark_point().encode(
+        x=alt.X(time_var),
+        y=alt.Y(y_var_between)
+    ).properties(
+        title=f"{y_var_between} vs. {time_var} (Between Individuals)"
+    )
+    reg_btwn_time = scatter_btwn_time.transform_regression(time_var,y_var_between).mark_line(
+        color="red"
+    )
+    scatter_wthn_time = alt.Chart(df_within).mark_point().encode(
+        x=alt.X(time_var),
+        y=alt.Y(y_var_within)
+    ).properties(
+        title=f"{y_var_within} vs. {time_var}"
+    )
+    reg_wthn_time = scatter_wthn_time.transform_regression(time_var,y_var_within).mark_line(
+        color="red"
+    )
+    disp_plot_time = scatter_btwn_time + reg_btwn_time | scatter_wthn_time + reg_wthn_time
 
-    st.write(type(df.columns))
-
+    final_plot = alt.vconcat(disp_plot_dist, disp_plot_time)
+    final_plot
     return
 
 
 def date_lapse(df, date_names=["ActivityDay", "SleepDay", "ActivityDate", "Date"], lapse_name="lapse"):
     # return a df with a new column called "lapse" (or as specified)
     name = np.array(df.columns)[[i in date_names for i in df.columns]][0]
-    df[name] = pd.to_datetime(df[name], unit='D')
+    df[name] = pd.to_datetime(df[name])
     start_dates = {}
     for id, frame in df.sort_values(by=name).groupby("Id"):
         start_dates[id] = frame.iloc[0][name]
