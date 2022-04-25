@@ -323,16 +323,20 @@ def run_vis_3():
     st.write("")
     w = 300
     # plots for distance
-
+    # if len(individuals) > 0:
+    #     st.write(list(df_btwn.index) in list(set(individuals).intersection(set(df_btwn.index))))
     # determine y axis limits
     y_min_btwn = min(df_btwn[y_var_between])
     y_max_btwn = max(df_btwn[y_var_between])
     if len(individuals) > 0:
         y_min_wthn = min(df_within[y_var_within])
         y_max_wthn = max(df_within[y_var_within])
+        #coloration = alt.condition("df_btwn.index in individuals",alt.ColorValue("green"),alt.ColorValue("blue"))
     else:
         y_min_wthn = min(df_btwn[y_var_within])
         y_max_wthn = max(df_btwn[y_var_within])
+    
+    coloration="green"
 
     if y_var_between == y_var_within:
         y_min_btwn = min(y_min_btwn,y_min_wthn)
@@ -340,7 +344,7 @@ def run_vis_3():
         y_max_btwn = max(y_max_btwn,y_max_wthn)
         y_max_wthn = y_max_btwn
     scatter_btwn_dist = alt.Chart(df_btwn).mark_point(
-        color="green"#alt.condition("df_btwn.Id in individuals",alt.ColorValue("green"),alt.ColorValue("blue"))
+        color=coloration#"green"#alt.condition("df_btwn.Id in individuals",alt.ColorValue("green"),alt.ColorValue("blue"))
     ).encode(
         x=alt.X(distance_var),
         y=alt.Y(y_var_between,scale=alt.Scale(domain=(y_min_btwn,y_max_btwn)))
@@ -382,7 +386,7 @@ def run_vis_3():
     # plots for time
 
     scatter_btwn_time = alt.Chart(df_btwn).mark_point(
-        color="green"
+        color=coloration#"green"
     ).encode(
         x=alt.X(time_var),
         y=alt.Y(y_var_between,scale=alt.Scale(domain=(y_min_btwn,y_max_btwn)))
