@@ -308,9 +308,6 @@ def run_vis_3():
     distance_var = st.selectbox(label="Select distance variable",
         options=distance_vars,
         index=0)
-    time_var = st.selectbox(label="Select time variable",
-        options=time_vars,
-        index=0)
     y_var_between = st.selectbox(label="Select Y variable for comparison between individuals",
         options=y_vars_between,
         index=0)
@@ -349,6 +346,11 @@ def run_vis_3():
     )
     disp_plot_dist = scatter_btwn_dist + reg_btwn_dist | scatter_wthn_dist + reg_wthn_dist
 
+    disp_plot_dist
+    time_var = st.selectbox(label="Select time variable",
+        options=time_vars,
+        index=0)
+
     # plots for time
     scatter_btwn_time = alt.Chart(df_btwn).mark_point(
         color="green"
@@ -374,8 +376,9 @@ def run_vis_3():
     )
     disp_plot_time = scatter_btwn_time + reg_btwn_time | scatter_wthn_time + reg_wthn_time
 
-    final_plot = alt.vconcat(disp_plot_dist, disp_plot_time)
-    final_plot
+    disp_plot_time
+    # final_plot = alt.vconcat(disp_plot_dist, disp_plot_time)
+    # final_plot
 
     st.markdown("""
     <style>
