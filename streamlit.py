@@ -33,17 +33,31 @@ def run_vis_1():
 
     # read in the a file required for the plot
     daily_activity = pd.read_csv(data_root + data_dict[activity])
+    daily_activity = date_lapse(daily_activity, date_names=['ActivityDay'])
+    daily_activity = daily_activity.drop(columns=['lapse'])
+
     if activity == "Intensities":
         var = st.selectbox(f"Variables in {activity}", daily_activity.columns.to_list()[2:])
         daily_activity = daily_activity[['Id', 'ActivityDay', var]]
 
+
     # subset = subset[subset["Cancer"] == cancer]
     # TODO: Sleep time column is sleepDay, not ActivityDay. Need to conditional merge.
-    category = st.selectbox('Select Categories',["Steps", "Sleep", "Choice 3"])
+    category = st.selectbox('Select Categories',["Steps", "Sleep"])
     category_var = pd.read_csv(data_root + data_dict[category])
+
+
     if category == "Sleep":
-        var = st.selectbox(f"Variables in {category}", category_var.columns.to_list()[3:])
-        daily_activity = daily_activity[['Id', 'ActivityDay', var]]
+        var_cat = st.selectbox(f"Variables in {category}", category_var.columns.to_list()[3:])
+        category_var = date_lapse(category_var, date_names=['SleepDay'])
+        category_var = category_var.rename(columns={'SleepDay': 'ActivityDay'})
+        category_var = category_var.drop(columns=['lapse', 'TotalSleepRecords'])
+        category_var = category_var[['Id', 'ActivityDay', var_cat]]
+    else:
+        var_cat = "StepTotal"
+        category_var = date_lapse(category_var, date_names=['ActivityDay'])
+        category_var = category_var.drop(columns=['lapse'])
+        category_var = category_var[['Id', 'ActivityDay', var_cat]]
     
     # daily_calories = pd.read_csv("https://raw.githubusercontent.com/qzhang21/BMI706_FinalProject/main/Data/dailyCalories_merged.csv")
     # daily_steps = pd.read_csv("https://raw.githubusercontent.com/qzhang21/BMI706_FinalProject/main/Data/dailySteps_merged.csv")
