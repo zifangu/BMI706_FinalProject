@@ -103,7 +103,7 @@ def run_vis_1():
     selection = alt.selection_single(fields=['Quantile'], bind='legend')
     base = alt.Chart(test_df).transform_filter(selection)
 
-    chart = base.transform_density(
+    chart = alt.Chart(test_df).transform_density(
         var,
         as_=[var, 'density'],
         extent=[min(y_axis_val), max(y_axis_val)],
@@ -112,6 +112,7 @@ def run_vis_1():
         y=alt.Y(var, type="quantitative"),
         color=alt.condition(selection, 'Quantile:N', alt.value("lightgray")),
         tooltip = [var],
+        opacity=alt.condition(selection, alt.value(1), alt.value(0.2)),
         x=alt.X(
             'density:Q',
             stack='center',
