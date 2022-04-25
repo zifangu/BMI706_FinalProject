@@ -1,4 +1,4 @@
-from turtle import width
+from turtle import color, width
 import streamlit as st
 import altair as alt
 import pandas as pd
@@ -14,10 +14,12 @@ import os
 
 data_root = "https://raw.githubusercontent.com/qzhang21/BMI706_FinalProject/main/Data/"
 data_dict = {"Activity": "dailyActivity_merged.csv",
-            "Calories": "dailyCalories_merged.csv",
-            "Steps": "dailySteps_merged.csv",
-            "Sleep": "sleepDay_merged.csv"}
+             "Calories": "dailyCalories_merged.csv",
+             "Steps": "dailySteps_merged.csv",
+             "Sleep": "sleepDay_merged.csv",
+             "Weight": "weightLogInfo_merged.csv"}
 # call example: data_root + data_dict["Activity"]
+
 
 def instruction_call():
     st.write("Welcome. This product is made possible by April Yan, Ivan Gu, Marie Zhang, and Yuanchen Wang.")
@@ -25,13 +27,16 @@ def instruction_call():
     st.sidebar.success("Choose any visualization to view content.")
     return
 
+
 def run_vis_1():
     # year = st.slider('Select Year', min(df['Year']), max(df['Year']), 2008)
-    activity = st.selectbox('Select Activity',["Calories", "Choice 2", "Choice 3"])
+    activity = st.selectbox(
+        'Select Activity', ["Calories", "Choice 2", "Choice 3"])
     # subset = subset[subset["Cancer"] == cancer]
 
-    category = st.selectbox('Select Categories',["Steps", "Sleep", "Choice 3"])
-    
+    category = st.selectbox('Select Categories', [
+                            "Steps", "Sleep", "Choice 3"])
+
     # daily_calories = pd.read_csv("https://raw.githubusercontent.com/qzhang21/BMI706_FinalProject/main/Data/dailyCalories_merged.csv")
     # daily_steps = pd.read_csv("https://raw.githubusercontent.com/qzhang21/BMI706_FinalProject/main/Data/dailySteps_merged.csv")
 
@@ -40,17 +45,21 @@ def run_vis_1():
     category_var = pd.read_csv(data_root + data_dict[category])
 
     # merge files
-    test_df = daily_activity.merge(category_var, on=["Id", "ActivityDay"]) # merge files
+    test_df = daily_activity.merge(
+        category_var, on=["Id", "ActivityDay"])  # merge files
 
     # split the quantiles
-    quantile_df = test_df.quantile(q=[.25, 0.50, 0.75], axis = 0)
+    quantile_df = test_df.quantile(q=[.25, 0.50, 0.75], axis=0)
     q1 = float(quantile_df.iloc[0, [-1]])
     q2 = float(quantile_df.iloc[1, [-1]])
     q3 = float(quantile_df.iloc[2, [-1]])
     # second plot, also plot Q1,2,3,4. This is to show how many days do individuals are within the quantiles
-    index_q1 = np.where(test_df.iloc[:, [-1]] < q1)[0] # gets the index of the df matching the condition. [0] to get the index
-    index_q2 = np.where((test_df.iloc[:, [-1]] >= q1) & (test_df.iloc[:, [-1]] < q2))[0]
-    index_q3 = np.where((test_df.iloc[:, [-1]] >= q2) & (test_df.iloc[:, [-1]] < q3))[0]
+    # gets the index of the df matching the condition. [0] to get the index
+    index_q1 = np.where(test_df.iloc[:, [-1]] < q1)[0]
+    index_q2 = np.where(
+        (test_df.iloc[:, [-1]] >= q1) & (test_df.iloc[:, [-1]] < q2))[0]
+    index_q3 = np.where(
+        (test_df.iloc[:, [-1]] >= q2) & (test_df.iloc[:, [-1]] < q3))[0]
     index_q4 = np.where(test_df.iloc[:, [-1]] >= q3)[0]
 
     # assign quantiles
@@ -64,9 +73,7 @@ def run_vis_1():
     # axis_dictionary['activity'] = "Calories"
     y_axis_val = test_df[activity]
 
-
     selection = alt.selection_multi(fields=['Quantile'], bind='legend')
-
 
     chart = alt.Chart(test_df).transform_density(
         activity,
@@ -82,7 +89,7 @@ def run_vis_1():
             stack='center',
             impute=None,
             title=None,
-            axis=alt.Axis(labels=False, values=[0],grid=False, ticks=True),
+            axis=alt.Axis(labels=False, values=[0], grid=False, ticks=True),
         ),
         tooltip=['density:Q'],
         column=alt.Column(
@@ -103,94 +110,144 @@ def run_vis_1():
         stroke=None
     )
 
-    chart 
+    chart
 
     st.write(category + " selected!")
     return
 
+
 def run_vis_2():
     # time vs variables
-    lapse_name="lapse"
-    date_names=["ActivityDay", "SleepDay", "ActivityDate", "Date"]
+    lapse_name = "lapse"
+    date_names = ["ActivityDay", "SleepDay", "ActivityDate", "Date"]
 
-    df_name = st.selectbox("Select Variable",["Calories", "Steps", "Sleep"])
+    df_name = st.selectbox("Select Variable", [
+                           "Calories", "Steps", "Sleep", "Weight"])
     # var = st.selectbox("Select Variable", list(data_dict.keys()))
     if df_name == "Calories":
         var = "Calories"
     elif df_name == "Steps":
         var = "StepTotal"
     elif df_name == "Sleep":
-        var = st.selectbox(f"Variables in {df_name}", ["TotalMinutesAsleep", "TotalTimeInBed"])
+        var = st.selectbox(f"Variables in {df_name}", [
+                           "TotalMinutesAsleep", "TotalTimeInBed"])
+    elif df_name == "Weight":
+        var = st.selectbox(f"Variables in {df_name}", [
+                           "WeightKg", "WeightPounds", "BMI"])
 
     df = pd.read_csv(data_root + data_dict[df_name])
     df = date_lapse(df, date_names=date_names, lapse_name=lapse_name)
 
-    participants = st.multiselect("Select Participants", np.unique(df["Id"]))
-    df["selected"] = [True if row["Id"] in participants else False for _, row in df.iterrows()]
+    df_sum = df.groupby(by=lapse_name).mean().reset_index()
+    df_sum["sd"] = df.groupby(by=lapse_name).std().reset_index()[var]
+    df_sum["lower"] = [row[var]-row["sd"] for _, row in df_sum.iterrows()]
+    df_sum["upper"] = [row[var]+row["sd"] for _, row in df_sum.iterrows()]
 
-    scatter = alt.Chart(df).mark_line().encode(
-        x=alt.X(lapse_name),
-        y=alt.Y(var),
-        color=alt.Color("Id", type="nominal", legend=alt.Legend(columns=4)),
-        tooltip=[lapse_name, var],
-        opacity = alt.condition(alt.datum.selected, alt.value(0.8), alt.value(0.2))
+    participants = st.multiselect("Select Participants", np.unique(df["Id"]))
+    df["selected"] = [True if row["Id"]
+                      in participants else False for _, row in df.iterrows()]
+
+    color = alt.Color('Id:N', legend=None,
+                      scale=alt.Scale(scheme='category10'))
+    # color = alt.condition(alt.datum.selected,
+    #                       alt.Color('Id:N', legend=None,
+    #                                 scale=alt.Scale(scheme='category10')),
+    #                       alt.value('white'))
+
+    indiv = alt.Chart(df).mark_line(strokeDash=[5, 4]).encode(
+        x=alt.X(lapse_name, axis=alt.Axis(title="Time (Day)")),
+        y=alt.Y(var, axis=alt.Axis(title=f"{var}")),
+        color=color,
+        # tooltip=[lapse_name, var],
+        opacity=alt.condition(alt.datum.selected,
+                              alt.value(0.8), alt.value(0.2)),
+        # tooltip=alt.condition(alt.datum.selected, ["Id:N", f"{var}:N"], [])
+        # not supported by altair
     ).properties(
         title=f"{var} by Time",
-        width=800
+        width=500
     )
 
-    avg = alt.Chart(df).mark_line(color="gray").encode(
+    avg = alt.Chart(df_sum).mark_line().encode(
         x=alt.X(lapse_name),
-        y=alt.Y(f"mean({var})")
+        y=alt.Y(var),
+        color=alt.value('gray'),
+        tooltip=[f"{lapse_name}:O", f"{var}:N"]
     ).properties(
-        width=800
+        width=600
     )
 
-    scatter + avg
+    band = alt.Chart(df_sum).mark_area().encode(
+        x=alt.X(lapse_name),
+        y='lower',
+        y2='upper',
+        color=alt.value('lightgray'),
+        opacity=alt.value(0.2)
+    )
 
+
+    legend = alt.Chart(df[df["selected"] == True]).mark_point(filled=True, size=200).encode(
+        y=alt.Y('Id:N', axis=alt.Axis(
+            orient='right', title="Selected Participant(s)")),
+        color=color
+    ).properties(
+        title=""
+    )
+    plot = (indiv + avg + band) | legend
+
+    plot
+
+    st.write("**Note:**")
+    st.write("*Gray solid line:* total average of all participants;")
+    st.write("*Light gray area:* one standard deviation of the average.")
     return
+
 
 def run_vis_3():
     processed_data_dir = "ProcessedData"
     data_dir = "Data"
-    df = pd.read_csv(os.path.join(processed_data_dir,"dailyActivity_weight_merged.csv"),index_col=0)
+    df = pd.read_csv(os.path.join(processed_data_dir,
+                     "dailyActivity_weight_merged.csv"), index_col=0)
     df = date_lapse(df)
 
-    data_level = st.selectbox("Select Level of Data",["Within Individual","Between Individuals"])
+    data_level = st.selectbox("Select Level of Data", [
+                              "Within Individual", "Between Individuals"])
     if data_level == "Within Individual":
         x_vars = list(df.columns).remove('Id')
     elif data_level == "Between Individuals":
         x_vars = list(df.columns).remove('Id')
-    
-    x_var = st.selectbox("Select X variable",x_vars)
+
+    x_var = st.selectbox("Select X variable", x_vars)
 
     y_vars = df.columns.remove(x_var)
 
-    y_var = st.selectbox("Select Y variable",y_vars)
-    
+    y_var = st.selectbox("Select Y variable", y_vars)
+
     st.write(type(df.columns))
 
-    
     return
+
 
 def date_lapse(df, date_names=["ActivityDay", "SleepDay", "ActivityDate", "Date"], lapse_name="lapse"):
     # return a df with a new column called "lapse" (or as specified)
     name = np.array(df.columns)[[i in date_names for i in df.columns]][0]
-    df[name] = pd.to_datetime(df[name])
+    df[name] = pd.to_datetime(df[name], unit='D')
     start_dates = {}
     for id, frame in df.sort_values(by=name).groupby("Id"):
         start_dates[id] = frame.iloc[0][name]
-    df[lapse_name] = [(row[name] - start_dates[row["Id"]]).days  for _, row in df.iterrows()]
+    df[lapse_name] = [(row[name] - start_dates[row["Id"]]
+                       ).days for _, row in df.iterrows()]
     return df
+
 
 def main():
     st.sidebar.title("BMI 706 Final Project")
     vis_mode = st.sidebar.selectbox("Choose mode and visualization",
-        ["Show Instructions",
-        "Activities vs. Category",
-        "Activities vs. Time",
-        "Correlations",
-        "Show the source code"])
+                                    ["Show Instructions",
+                                     "Activities vs. Category",
+                                     "Activities vs. Time",
+                                     "Correlations",
+                                     "Show the source code"])
 
     # initialize data
     # data_init()
