@@ -20,8 +20,9 @@ data_dict = {"Activity": "dailyActivity_merged.csv",
 
 def instruction_call():
     st.write("# Welcome!")
+    st.write("*Apr. 24th, 2022*")
     st.write("This product is made possible by April Yan, Ivan Gu, Marie Zhang, and Yuanchen Wang.")
-
+    st.write("Select any visualization in the drop-down list on the sidebar to view content.")
     st.sidebar.success("Choose any visualization to view content.")
     return
 
@@ -126,7 +127,9 @@ def run_vis_1():
 
 def run_vis_2(): # wyc
     # time vs variables
-    st.write("## Variables vs. Time (Day)")
+    st.sidebar.success("Daily mean values over all participants of the variable selected.")
+
+    # st.write("## Variables vs. Time (Day)")
 
     lapse_name = "lapse"
     date_names = ["ActivityDay", "SleepDay", "ActivityDate", "Date"]
