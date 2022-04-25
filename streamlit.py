@@ -323,28 +323,44 @@ def run_vis_3():
     st.write("")
     w = 300
     # plots for distance
+
+    # determine y axis limits
+    y_min_btwn = min(df_btwn[y_var_between])
+    y_max_btwn = max(df_btwn[y_var_between])
+    if len(individuals) > 0:
+        y_min_wthn = min(df_within[y_var_within])
+        y_max_wthn = max(df_within[y_var_within])
+    else:
+        y_min_wthn = min(df_btwn[y_var_within])
+        y_max_wthn = max(df_btwn[y_var_within])
+
+    if y_var_between == y_var_within:
+        y_min_btwn = min(y_min_btwn,y_min_wthn)
+        y_min_wthn = y_min_btwn
+        y_max_btwn = max(y_max_btwn,y_max_wthn)
+        y_max_wthn = y_max_btwn
     scatter_btwn_dist = alt.Chart(df_btwn).mark_point(
-        color="green"
+        color="green"#alt.condition("df_btwn.Id in individuals",alt.ColorValue("green"),alt.ColorValue("blue"))
     ).encode(
         x=alt.X(distance_var),
-        y=alt.Y(y_var_between)
+        y=alt.Y(y_var_between,scale=alt.Scale(domain=(y_min_btwn,y_max_btwn)))
     ).properties(
         title=f"{y_var_between} vs. {distance_var} (Between Individuals)",
         width=w
     )
     reg_btwn_dist = scatter_btwn_dist.transform_regression(distance_var,y_var_between).mark_line(
-        color="red"
+        color="red"#,scale=alt.Scale(domain=(y_min_btwn,y_max_btwn))
     )
 
     scatter_wthn_dist = alt.Chart(df_within).mark_point().encode(
         x=alt.X(distance_var),
-        y=alt.Y(y_var_within)
+        y=alt.Y(y_var_within,scale=alt.Scale(domain=(y_min_wthn,y_max_wthn)))
     ).properties(
         title=f"{y_var_within} vs. {distance_var} (Selected Individual(s))",
         width=w
     )
     reg_wthn_dist = scatter_wthn_dist.transform_regression(distance_var,y_var_within).mark_line(
-        color="red"
+        color="red"#,scale=alt.Scale(domain=(y_min_wthn,y_max_wthn))
     )
     disp_plot_dist = scatter_btwn_dist + reg_btwn_dist | scatter_wthn_dist + reg_wthn_dist
 
@@ -364,27 +380,28 @@ def run_vis_3():
         index=0)
 
     # plots for time
+
     scatter_btwn_time = alt.Chart(df_btwn).mark_point(
         color="green"
     ).encode(
         x=alt.X(time_var),
-        y=alt.Y(y_var_between)
+        y=alt.Y(y_var_between,scale=alt.Scale(domain=(y_min_btwn,y_max_btwn)))
     ).properties(
         title=f"{y_var_between} vs. {time_var} (Between Individuals)",
         width=w
     )
     reg_btwn_time = scatter_btwn_time.transform_regression(time_var,y_var_between).mark_line(
-        color="red"
+        color="red"#,scale=alt.Scale(domain=(y_min_btwn,y_max_btwn))
     )
     scatter_wthn_time = alt.Chart(df_within).mark_point().encode(
         x=alt.X(time_var),
-        y=alt.Y(y_var_within)
+        y=alt.Y(y_var_within,scale=alt.Scale(domain=(y_min_wthn,y_max_wthn)))
     ).properties(
         title=f"{y_var_within} vs. {time_var} (Selected Individual(s))",
         width=w
     )
     reg_wthn_time = scatter_wthn_time.transform_regression(time_var,y_var_within).mark_line(
-        color="red"
+        color="red"#,scale=alt.Scale(domain=(y_min_wthn,y_max_wthn))
     )
     disp_plot_time = scatter_btwn_time + reg_btwn_time | scatter_wthn_time + reg_wthn_time
 
