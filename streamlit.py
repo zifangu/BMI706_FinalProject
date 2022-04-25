@@ -252,7 +252,7 @@ def run_vis_2(): # wyc
     plot = (indiv + band + avg) | legend
 
     if len(participants) != 0:
-        selected = alt.Chart(df[df["selected"] == True]).mark_line().encode(
+        selected = alt.Chart(df[df["selected"] == True]).mark_line(point=True).encode(
             x=alt.X(lapse_name, axis=alt.Axis(title="Time (Day)")),
             y=alt.Y(var, axis=alt.Axis(title=f"{var}")),
             color=color,
