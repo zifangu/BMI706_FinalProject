@@ -315,6 +315,10 @@ def run_vis_3():
         options=y_vars_between,
         index=0)
     
+    st.write("Note:")
+    st.write("There is only one option (calories) for the y-variable for selected individuals since each individual only has one BMI or weight value.")
+    st.write("")
+    w = 300
     # plots for distance
     s1,i1,r1,p1,se1 = stats.linregress(x=df_btwn[distance_var],y=df_btwn[y_var_between])
     scatter_btwn_dist = alt.Chart(df_btwn).mark_point(
@@ -323,20 +327,22 @@ def run_vis_3():
         x=alt.X(distance_var),
         y=alt.Y(y_var_between)
     ).properties(
-        title=f"{y_var_between} vs. {distance_var} (Between Individuals)"
+        title=f"{y_var_between} vs. {distance_var} (Between Individuals)",
+        width=w
     )
     reg_btwn_dist = scatter_btwn_dist.transform_regression(distance_var,y_var_between).mark_line(
         color="red"
     ).encode(
         tooltip=[alt.Tooltip(
-            title=f"slope={s1:.2E},\n intercept={i1:.2E},\n R-squared={r1**2:.2f},\n p-val={p1:.2E},\n SE={se1:.2E}")
+            title=f"slope={s1:.2E}, intercept={i1:.2E}, R-squared={r1**2:.2f}, p-val={p1:.2E}, SE={se1:.2E}")
             ]
     )
     scatter_wthn_dist = alt.Chart(df_within).mark_point().encode(
         x=alt.X(distance_var),
         y=alt.Y(y_var_within)
     ).properties(
-        title=f"{y_var_within} vs. {distance_var} (Selected Individual(s))"
+        title=f"{y_var_within} vs. {distance_var} (Selected Individual(s))",
+        width=w
     )
     reg_wthn_dist = scatter_wthn_dist.transform_regression(distance_var,y_var_within).mark_line(
         color="red"
@@ -350,7 +356,8 @@ def run_vis_3():
         x=alt.X(time_var),
         y=alt.Y(y_var_between)
     ).properties(
-        title=f"{y_var_between} vs. {time_var} (Between Individuals)"
+        title=f"{y_var_between} vs. {time_var} (Between Individuals)",
+        width=w
     )
     reg_btwn_time = scatter_btwn_time.transform_regression(time_var,y_var_between).mark_line(
         color="red"
@@ -359,7 +366,8 @@ def run_vis_3():
         x=alt.X(time_var),
         y=alt.Y(y_var_within)
     ).properties(
-        title=f"{y_var_within} vs. {time_var} (Selected Individual(s))"
+        title=f"{y_var_within} vs. {time_var} (Selected Individual(s))",
+        width=w
     )
     reg_wthn_time = scatter_wthn_time.transform_regression(time_var,y_var_within).mark_line(
         color="red"
@@ -368,6 +376,17 @@ def run_vis_3():
 
     final_plot = alt.vconcat(disp_plot_dist, disp_plot_time)
     final_plot
+
+    st.markdown("""
+    <style>
+    .big-font {
+        font-size:30px !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    st.markdown('<p class="big-font">MORE NOTES:</p>', unsafe_allow_html=True)
+    st.write("In the between individuals plots, each individual is a data point." + 
+    "\n\n"+"In the selected individual(s) plot, each time point for each individual is a data point.")
     return
 
 
