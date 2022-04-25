@@ -135,9 +135,9 @@ def run_vis_1():
 
     #st.write(selection)
     #subset = test_df[test_df["Quantile"] == selection]
-
+    
     selection_id = alt.selection_multi(fields=['Id'],bind='legend')
-    chart2 = base.mark_line(strokeWidth=1).encode(
+    chart2 = base.mark_line(strokeWidth=0.5).encode(
         x = alt.X('ActivityDay'),
         y = alt.Y(var, type="quantitative"),
         color = alt.condition(selection_id, 'Id:N', alt.value('lightgray')),
