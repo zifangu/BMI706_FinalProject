@@ -96,22 +96,22 @@ def run_vis_1():
     # axis_dictionary['activity'] = "Calories"
     y_axis_val = test_df[var]
 
-    selection = alt.selection_multi(fields=['Quantile'], bind='legend')
+    # selection = alt.selection_multi(fields=['Quantile'], bind='legend')
 
-    y_axis_val = test_df[activity]
+    # y_axis_val = test_df[activity]
 
     selection = alt.selection_single(fields=['Quantile'], bind='legend')
     base = alt.Chart(test_df).transform_filter(selection)
 
     chart = base.transform_density(
-        activity,
-        as_=[activity, 'density'],
+        var,
+        as_=[var, 'density'],
         extent=[min(y_axis_val), max(y_axis_val)],
         groupby=['Quantile']
     ).mark_area(orient='horizontal').encode(
-        y='Calories:Q',
+        y=alt.Y(var, type="quantitative"),
         color=alt.condition(selection, 'Quantile:N', alt.value("lightgray")),
-        tooltip = ['Calories'],
+        tooltip = [var],
         x=alt.X(
             'density:Q',
             stack='center',
@@ -135,10 +135,10 @@ def run_vis_1():
     selection_id = alt.selection_multi(fields=['Id'],bind='legend')
     chart2 = base.mark_line(strokeWidth=1).encode(
         x = alt.X('ActivityDay'),
-        y = alt.Y(activity),
+        y = alt.Y(var, type="quantitative"),
         color = alt.condition(selection_id, 'Id:N', alt.value('lightgray')),
         opacity=alt.condition(selection_id, alt.value(1.0), alt.value(0.2)),
-        tooltip = ['ActivityDay',activity]
+        tooltip = ['ActivityDay',var]
     ).properties(
         #title=f"{cancer} mortality rates for {'males' if sex == 'M' else 'females'} in {year}",
         width = 500,
