@@ -4,6 +4,7 @@ import altair as alt
 import pandas as pd
 import numpy as np
 import os
+from scipy import stats
 
 # https://github.com/streamlit/demo-self-driving
 
@@ -260,7 +261,7 @@ def run_vis_3():
     processed_data_dir = "ProcessedData"
     #data_dir = "Data"
     df = pd.read_csv(os.path.join(processed_data_dir,"dailyActivity_weight_merged.csv"),index_col=0)
-    df = date_lapse(df)
+    df_btwn = pd.read_csv(os.path.join(processed_data_dir,"indiv_dailyActivity_weight_merged.csv"),index_col=0)
 
     distance_vars = ["TotalSteps",
         "TotalDistance",
@@ -276,8 +277,8 @@ def run_vis_3():
         "LightlyActiveMinutes",
         "SedentaryMinutes"]
 
-    y_vars_between = ["BMI",
-        "Calories",
+    y_vars_between = ["Calories",
+        "BMI",
         "WeightKg"]
     y_var_within = "Calories"
 
@@ -296,7 +297,10 @@ def run_vis_3():
         index=0)
     
     # plots for distance
-    scatter_btwn_dist = alt.Chart(df).mark_point().encode(
+    s1,i1,r1,p1,se1 = stats.linregress(x=df_btwn[distance_var],y=df_btwn[y_var_between])
+    scatter_btwn_dist = alt.Chart(df_btwn).mark_point(
+        color="green"
+    ).encode(
         x=alt.X(distance_var),
         y=alt.Y(y_var_between)
     ).properties(
@@ -304,12 +308,16 @@ def run_vis_3():
     )
     reg_btwn_dist = scatter_btwn_dist.transform_regression(distance_var,y_var_between).mark_line(
         color="red"
+    ).encode(
+        tooltip=[alt.Tooltip(
+            title=f"slope={s1:.2E},\n intercept={i1:.2E},\n R-squared={r1**2:.2f},\n p-val={p1:.2E},\n SE={se1:.2E}")
+            ]
     )
     scatter_wthn_dist = alt.Chart(df_within).mark_point().encode(
         x=alt.X(distance_var),
         y=alt.Y(y_var_within)
     ).properties(
-        title=f"{y_var_within} vs. {distance_var}"
+        title=f"{y_var_within} vs. {distance_var} (Selected Individual(s))"
     )
     reg_wthn_dist = scatter_wthn_dist.transform_regression(distance_var,y_var_within).mark_line(
         color="red"
@@ -317,7 +325,9 @@ def run_vis_3():
     disp_plot_dist = scatter_btwn_dist + reg_btwn_dist | scatter_wthn_dist + reg_wthn_dist
 
     # plots for time
-    scatter_btwn_time = alt.Chart(df).mark_point().encode(
+    scatter_btwn_time = alt.Chart(df_btwn).mark_point(
+        color="green"
+    ).encode(
         x=alt.X(time_var),
         y=alt.Y(y_var_between)
     ).properties(
@@ -330,7 +340,7 @@ def run_vis_3():
         x=alt.X(time_var),
         y=alt.Y(y_var_within)
     ).properties(
-        title=f"{y_var_within} vs. {time_var}"
+        title=f"{y_var_within} vs. {time_var} (Selected Individual(s))"
     )
     reg_wthn_time = scatter_wthn_time.transform_regression(time_var,y_var_within).mark_line(
         color="red"
