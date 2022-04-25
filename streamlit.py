@@ -101,7 +101,7 @@ def run_vis_1():
     y_axis_val = test_df[var]
 
     # selection = alt.selection_multi(fields=['Quantile'], bind='legend')
-    st.write(test_df)
+    # st.write(test_df)
     # y_axis_val = test_df[activity]
 
     selection = alt.selection_single(fields=['Quantile'])
@@ -143,7 +143,7 @@ def run_vis_1():
         y = alt.Y(var, type="quantitative", scale=alt.Scale(domain=[min(test_df[var]),max(test_df[var])])),
         color = alt.condition(selection_id, 'Id:N', alt.value('lightgray')),
         opacity=alt.condition(selection_id, alt.value(1.0), alt.value(0.2)),
-        tooltip = ['ActivityDay',var]
+        tooltip = ['ActivityDay',var,'Quantile']
     ).properties(
         #title=f"{cancer} mortality rates for {'males' if sex == 'M' else 'females'} in {year}",
         width = 500,
