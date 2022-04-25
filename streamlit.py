@@ -1,5 +1,5 @@
 from turtle import color, width
-
+from scipy import stats
 from pyparsing import oneOf
 import streamlit as st
 import altair as alt
@@ -323,7 +323,6 @@ def run_vis_3():
     st.write("")
     w = 300
     # plots for distance
-    s1,i1,r1,p1,se1 = stats.linregress(x=df_btwn[distance_var],y=df_btwn[y_var_between])
     scatter_btwn_dist = alt.Chart(df_btwn).mark_point(
         color="green"
     ).encode(
@@ -335,11 +334,8 @@ def run_vis_3():
     )
     reg_btwn_dist = scatter_btwn_dist.transform_regression(distance_var,y_var_between).mark_line(
         color="red"
-    ).encode(
-        tooltip=[alt.Tooltip(
-            title=f"slope={s1:.2E}, intercept={i1:.2E}, R-squared={r1**2:.2f}, p-val={p1:.2E}, SE={se1:.2E}")
-            ]
     )
+
     scatter_wthn_dist = alt.Chart(df_within).mark_point().encode(
         x=alt.X(distance_var),
         y=alt.Y(y_var_within)
@@ -353,6 +349,16 @@ def run_vis_3():
     disp_plot_dist = scatter_btwn_dist + reg_btwn_dist | scatter_wthn_dist + reg_wthn_dist
 
     disp_plot_dist
+
+    s1,i1,r1,p1,se1 = stats.linregress(x=df_btwn[distance_var],y=df_btwn[y_var_between])
+    st.write(f"**{y_var_between} vs. {distance_var} (Between Individuals)**")
+    st.write(f"slope={s1:.2E}, intercept={i1:.2E}, R-squared={r1**2:.2f}, p-val={p1:.2E}, SE={se1:.2E}")
+    if len(individuals) > 0:
+        st.write(f"**{y_var_within} vs. {distance_var} (Selected Individual(s))**")
+        s2,i2,r2,p2,se2 = stats.linregress(x=df_within[distance_var],y=df_within[y_var_within])
+        st.write(f"slope={s2:.2E}, intercept={i2:.2E}, R-squared={r2**2:.2f}, p-val={p2:.2E}, SE={se1:.2E}")
+
+    st.write("="*100)
     time_var = st.selectbox(label="Select time variable",
         options=time_vars,
         index=0)
@@ -383,6 +389,13 @@ def run_vis_3():
     disp_plot_time = scatter_btwn_time + reg_btwn_time | scatter_wthn_time + reg_wthn_time
 
     disp_plot_time
+    s3,i3,r3,p3,se3 = stats.linregress(x=df_btwn[time_var],y=df_btwn[y_var_between])
+    st.write(f"**{y_var_between} vs. {time_var} (Between Individuals)**")
+    st.write(f"slope={s3:.2E}, intercept={i3:.2E}, R-squared={r3**2:.2f}, p-val={p3:.2E}, SE={se3:.2E}")
+    if len(individuals) > 0:
+        st.write(f"**{y_var_within} vs. {time_var} (Selected Individual(s))**")
+        s4,i4,r4,p4,se4 = stats.linregress(x=df_within[time_var],y=df_within[y_var_within])
+        st.write(f"slope={s4:.2E}, intercept={i4:.2E}, R-squared={r4**2:.2f}, p-val={p4:.2E}, SE={se4:.2E}")
     # final_plot = alt.vconcat(disp_plot_dist, disp_plot_time)
     # final_plot
 
