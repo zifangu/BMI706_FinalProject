@@ -156,16 +156,13 @@ def run_vis_2(): # wyc
     df_sum["lower"] = [row[var]-row["sd"] for _, row in df_sum.iterrows()]
     df_sum["upper"] = [row[var]+row["sd"] for _, row in df_sum.iterrows()]
 
-    participants = st.multiselect("Select Participants", np.unique(df["Id"]))
+    uniqueId = np.unique(df["Id"])
+    participants = st.multiselect("Select Participants", uniqueId)
     df["selected"] = [True if row["Id"]
                       in participants else False for _, row in df.iterrows()]
 
     color = alt.Color('Id:N', legend=None,
                       scale=alt.Scale(scheme='category10'))
-    # color = alt.condition(alt.datum.selected,
-    #                       alt.Color('Id:N', legend=None,
-    #                                 scale=alt.Scale(scheme='category10')),
-    #                       alt.value('white'))
 
     indiv = alt.Chart(df).mark_line(strokeDash=[5, 4]).encode(
         x=alt.X(lapse_name, axis=alt.Axis(title="Time (Day)")),
@@ -186,10 +183,10 @@ def run_vis_2(): # wyc
         y=alt.Y(var),
         color=alt.value('gray'),
         tooltip=[alt.Tooltip(f"{lapse_name}:O", title="Time (Day)"), 
-        alt.Tooltip(f"{var}:N", title="Average Calories", format=",.2f"),
-        alt.Tooltip("sd", title="Standard Deviation", format=",.2f"),
-        alt.Tooltip("lower", title="Lower Bound", format=",.2f"),
-        alt.Tooltip("upper", title="Upper Bound", format=",.2f")]
+        alt.Tooltip(f"{var}:Q", title="Average Calories", format=",.2f"),
+        alt.Tooltip("sd:Q", title="Standard Deviation", format=",.2f"),
+        alt.Tooltip("lower:Q", title="Lower Bound", format=",.2f"),
+        alt.Tooltip("upper:Q", title="Upper Bound", format=",.2f")]
     ).properties(
         width=600
     )
@@ -208,12 +205,30 @@ def run_vis_2(): # wyc
             orient='right', title="Selected Participant(s)")),
         color=color
     ).properties(
-        title=""
+        title="",
+        width=20
     )
     plot = (indiv + band + avg) | legend
 
+    if len(participants) != 0:
+        selected = alt.Chart(df[df["selected"] == True]).mark_line().encode(
+            x=alt.X(lapse_name, axis=alt.Axis(title="Time (Day)")),
+            y=alt.Y(var, axis=alt.Axis(title=f"{var}")),
+            color=color,
+            opacity=alt.value(0.8),
+            tooltip=[alt.Tooltip("Id:N", title="Participant Id"),
+                alt.Tooltip(f"{lapse_name}:O", title="Time (Day)"), 
+                alt.Tooltip(f"{var}:Q", title="Calories")]
+        ).properties(
+        title=f"{var} by Time",
+        width=500
+        )
+        plot = ((indiv + band + avg) | legend) & selected
+    
     plot
 
+    st.write(f"Total number of participants with current variable: {len(uniqueId)}")
+    st.write(f"Number of participants selected: {len(participants)} <br>")
     st.write("**Note:**")
     st.write("*Gray solid line:* total average of all participants;")
     st.write("*Light gray area:* one standard deviation of the average.")
