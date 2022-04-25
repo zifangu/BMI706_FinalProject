@@ -37,10 +37,12 @@ def run_vis_1():
     test_df = daily_activity.merge(category_var, on=["Id", "ActivityDay"]) # merge files
 
     # split the quantiles
-    quantile_df = test_df.quantile(q=[.25, 0.50, 0.75], axis = 0)
-    q1 = float(quantile_df.iloc[0, [-1]])
-    q2 = float(quantile_df.iloc[1, [-1]])
-    q3 = float(quantile_df.iloc[2, [-1]])
+    quantile_df = test_df.quantile(q=[0, .25, 0.50, 0.75, 1], axis = 0)
+    q1 = float(quantile_df.iloc[1, [-1]])
+    q2 = float(quantile_df.iloc[2, [-1]])
+    q3 = float(quantile_df.iloc[3, [-1]])
+    min_cat = float(quantile_df.iloc[0, [-1]])
+    max_cat = float(quantile_df.iloc[4, [-1]])
     # second plot, also plot Q1,2,3,4. This is to show how many days do individuals are within the quantiles
     index_q1 = np.where(test_df.iloc[:, [-1]] < q1)[0] # gets the index of the df matching the condition. [0] to get the index
     index_q2 = np.where((test_df.iloc[:, [-1]] >= q1) & (test_df.iloc[:, [-1]] < q2))[0]
@@ -79,31 +81,28 @@ def run_vis_1():
         ),
         column=alt.Column(
             'Quantile:N',
-            header=alt.Header(
-                titleOrient='bottom',
-                labelOrient='bottom',
-                labelPadding=0,
-            ),
-        )
-    ).properties(
-        width=75,
-        height=200
+            header=alt.Header(labels=False, title=None)
+            )
+        ).properties(
+        width=125,
+        height=300
     ).add_selection(selection)
 
     #st.write(selection)
     #subset = test_df[test_df["Quantile"] == selection]
 
-    #selection_id = alt.selection_multi(fields=['Id'],bind='legend')
-    chart2 = base.mark_line().encode(
+    selection_id = alt.selection_multi(fields=['Id'],bind='legend')
+    chart2 = base.mark_line(strokeWidth=1).encode(
         x = alt.X('ActivityDay'),
-        y = alt.Y('StepTotal'),
-        color = 'Id',#alt.condition(selection_id, 'Id:N', alt.value('lightgray')),
-        tooltip = ['ActivityDay','StepTotal']
+        y = alt.Y(activity),
+        color = alt.condition(selection_id, 'Id:N', alt.value('lightgray')),
+        opacity=alt.condition(selection_id, alt.value(1.0), alt.value(0.2)),
+        tooltip = ['ActivityDay',activity]
     ).properties(
         #title=f"{cancer} mortality rates for {'males' if sex == 'M' else 'females'} in {year}",
-        width = 300,
-        height = 200
-    ).add_selection(selection)
+        width = 500,
+        height = 400
+    ).add_selection(selection).add_selection(selection_id)
 
     #st.write(category + " selected!")
 
@@ -117,6 +116,8 @@ def run_vis_1():
     )
     
     # #st.altair_chart(chart, use_container_width=True)
+    st.write("Steps Quantile")
+    st.write("min:",min_cat,"25%:",q1,"50%:",q2,"75%:",q3,"max:",max_cat)
     st.altair_chart(chart3, use_container_width=True)
 
     return

@@ -4,6 +4,7 @@ import altair as alt
 import pandas as pd
 import numpy as np
 import os
+from scipy import stats
 
 # https://github.com/streamlit/demo-self-driving
 
@@ -34,32 +35,46 @@ def run_vis_1():
 
     # read in the a file required for the plot
     daily_activity = pd.read_csv(data_root + data_dict[activity])
+    daily_activity = date_lapse(daily_activity, date_names=['ActivityDay'])
+    daily_activity = daily_activity.drop(columns=['lapse'])
+
     if activity == "Intensities":
         var = st.selectbox(f"Variables in {activity}", daily_activity.columns.to_list()[2:])
         daily_activity = daily_activity[['Id', 'ActivityDay', var]]
 
+
     # subset = subset[subset["Cancer"] == cancer]
     # TODO: Sleep time column is sleepDay, not ActivityDay. Need to conditional merge.
-    category = st.selectbox('Select Categories',["Steps", "Sleep", "Choice 3"])
+    category = st.selectbox('Select Categories',["Steps", "Sleep"])
     category_var = pd.read_csv(data_root + data_dict[category])
+
+
     if category == "Sleep":
-        var = st.selectbox(f"Variables in {category}", category_var.columns.to_list()[3:])
-        daily_activity = daily_activity[['Id', 'ActivityDay', var]]
+        var_cat = st.selectbox(f"Variables in {category}", category_var.columns.to_list()[3:])
+        category_var = date_lapse(category_var, date_names=['SleepDay'])
+        category_var = category_var.rename(columns={'SleepDay': 'ActivityDay'})
+        category_var = category_var.drop(columns=['lapse', 'TotalSleepRecords'])
+        category_var = category_var[['Id', 'ActivityDay', var_cat]]
+    else:
+        var_cat = "StepTotal"
+        category_var = date_lapse(category_var, date_names=['ActivityDay'])
+        category_var = category_var.drop(columns=['lapse'])
+        category_var = category_var[['Id', 'ActivityDay', var_cat]]
     
     # daily_calories = pd.read_csv("https://raw.githubusercontent.com/qzhang21/BMI706_FinalProject/main/Data/dailyCalories_merged.csv")
     # daily_steps = pd.read_csv("https://raw.githubusercontent.com/qzhang21/BMI706_FinalProject/main/Data/dailySteps_merged.csv")
-
-
-        
+ 
     # merge files
     test_df = daily_activity.merge(
         category_var, on=["Id", "ActivityDay"])  # merge files
 
     # split the quantiles
-    quantile_df = test_df.quantile(q=[.25, 0.50, 0.75], axis=0)
-    q1 = float(quantile_df.iloc[0, [-1]])
-    q2 = float(quantile_df.iloc[1, [-1]])
-    q3 = float(quantile_df.iloc[2, [-1]])
+    quantile_df = test_df.quantile(q=[0, .25, 0.50, 0.75, 1], axis = 0)
+    q1 = float(quantile_df.iloc[1, [-1]])
+    q2 = float(quantile_df.iloc[2, [-1]])
+    q3 = float(quantile_df.iloc[3, [-1]])
+    min_cat = float(quantile_df.iloc[0, [-1]])
+    max_cat = float(quantile_df.iloc[4, [-1]])
     # second plot, also plot Q1,2,3,4. This is to show how many days do individuals are within the quantiles
     # gets the index of the df matching the condition. [0] to get the index
     index_q1 = np.where(test_df.iloc[:, [-1]] < q1)[0]
@@ -82,7 +97,12 @@ def run_vis_1():
     # axis_dictionary['activity'] = "Calories"
     y_axis_val = test_df[var]
 
-    selection = alt.selection_multi(fields=['Quantile'], bind='legend')
+    # selection = alt.selection_multi(fields=['Quantile'], bind='legend')
+
+    # y_axis_val = test_df[activity]
+
+    selection = alt.selection_single(fields=['Quantile'], bind='legend')
+    base = alt.Chart(test_df).transform_filter(selection)
 
     chart = alt.Chart(test_df).transform_density(
         var,
@@ -91,37 +111,58 @@ def run_vis_1():
         groupby=['Quantile']
     ).mark_area(orient='horizontal').encode(
         y=alt.Y(var, type="quantitative"),
-        color='Quantile:N',
+        color=alt.condition(selection, 'Quantile:N', alt.value("lightgray")),
+        tooltip = [var],
         opacity=alt.condition(selection, alt.value(1), alt.value(0.2)),
         x=alt.X(
             'density:Q',
             stack='center',
             impute=None,
             title=None,
-            axis=alt.Axis(labels=False, values=[0], grid=False, ticks=True),
+            axis=alt.Axis(labels=False, values=[0],grid=False, title=" ")
         ),
-        tooltip=['density:Q'],
         column=alt.Column(
             'Quantile:N',
-            header=alt.Header(
-                titleOrient='bottom',
-                labelOrient='bottom',
-                labelPadding=0,
-            ),
-        )
-    ).add_selection(
-        selection
+            header=alt.Header(labels=False, title=None)
+            )
+        ).properties(
+        width=125,
+        height=300
+    ).add_selection(selection)
+
+
+    #st.write(selection)
+    #subset = test_df[test_df["Quantile"] == selection]
+
+    selection_id = alt.selection_multi(fields=['Id'],bind='legend')
+    chart2 = base.mark_line(strokeWidth=1).encode(
+        x = alt.X('ActivityDay'),
+        y = alt.Y(var, type="quantitative"),
+        color = alt.condition(selection_id, 'Id:N', alt.value('lightgray')),
+        opacity=alt.condition(selection_id, alt.value(1.0), alt.value(0.2)),
+        tooltip = ['ActivityDay',var]
     ).properties(
-        width=100
+        #title=f"{cancer} mortality rates for {'males' if sex == 'M' else 'females'} in {year}",
+        width = 500,
+        height = 400
+    ).add_selection(selection).add_selection(selection_id)
+
+    #st.write(category + " selected!")
+
+    chart3 = alt.vconcat(chart, chart2
+    ).resolve_scale(
+        color='independent'
     ).configure_facet(
         spacing=0
     ).configure_view(
         stroke=None
     )
+    
+    # #st.altair_chart(chart, use_container_width=True)
+    st.write("Steps Quantile")
+    st.write("min:",min_cat,"25%:",q1,"50%:",q2,"75%:",q3,"max:",max_cat)
+    st.altair_chart(chart3, use_container_width=True)
 
-    chart
-
-    st.write(category + " selected!")
     return
 
 
@@ -239,7 +280,7 @@ def run_vis_3():
     processed_data_dir = "ProcessedData"
     #data_dir = "Data"
     df = pd.read_csv(os.path.join(processed_data_dir,"dailyActivity_weight_merged.csv"),index_col=0)
-    df = date_lapse(df)
+    df_btwn = pd.read_csv(os.path.join(processed_data_dir,"indiv_dailyActivity_weight_merged.csv"),index_col=0)
 
     distance_vars = ["TotalSteps",
         "TotalDistance",
@@ -255,8 +296,8 @@ def run_vis_3():
         "LightlyActiveMinutes",
         "SedentaryMinutes"]
 
-    y_vars_between = ["BMI",
-        "Calories",
+    y_vars_between = ["Calories",
+        "BMI",
         "WeightKg"]
     y_var_within = "Calories"
 
@@ -275,7 +316,10 @@ def run_vis_3():
         index=0)
     
     # plots for distance
-    scatter_btwn_dist = alt.Chart(df).mark_point().encode(
+    s1,i1,r1,p1,se1 = stats.linregress(x=df_btwn[distance_var],y=df_btwn[y_var_between])
+    scatter_btwn_dist = alt.Chart(df_btwn).mark_point(
+        color="green"
+    ).encode(
         x=alt.X(distance_var),
         y=alt.Y(y_var_between)
     ).properties(
@@ -283,12 +327,16 @@ def run_vis_3():
     )
     reg_btwn_dist = scatter_btwn_dist.transform_regression(distance_var,y_var_between).mark_line(
         color="red"
+    ).encode(
+        tooltip=[alt.Tooltip(
+            title=f"slope={s1:.2E},\n intercept={i1:.2E},\n R-squared={r1**2:.2f},\n p-val={p1:.2E},\n SE={se1:.2E}")
+            ]
     )
     scatter_wthn_dist = alt.Chart(df_within).mark_point().encode(
         x=alt.X(distance_var),
         y=alt.Y(y_var_within)
     ).properties(
-        title=f"{y_var_within} vs. {distance_var}"
+        title=f"{y_var_within} vs. {distance_var} (Selected Individual(s))"
     )
     reg_wthn_dist = scatter_wthn_dist.transform_regression(distance_var,y_var_within).mark_line(
         color="red"
@@ -296,7 +344,9 @@ def run_vis_3():
     disp_plot_dist = scatter_btwn_dist + reg_btwn_dist | scatter_wthn_dist + reg_wthn_dist
 
     # plots for time
-    scatter_btwn_time = alt.Chart(df).mark_point().encode(
+    scatter_btwn_time = alt.Chart(df_btwn).mark_point(
+        color="green"
+    ).encode(
         x=alt.X(time_var),
         y=alt.Y(y_var_between)
     ).properties(
@@ -309,7 +359,7 @@ def run_vis_3():
         x=alt.X(time_var),
         y=alt.Y(y_var_within)
     ).properties(
-        title=f"{y_var_within} vs. {time_var}"
+        title=f"{y_var_within} vs. {time_var} (Selected Individual(s))"
     )
     reg_wthn_time = scatter_wthn_time.transform_regression(time_var,y_var_within).mark_line(
         color="red"
