@@ -263,7 +263,7 @@ def run_vis_2(): # wyc
                 alt.Tooltip(f"{lapse_name}:O", title="Time (Day)"), 
                 alt.Tooltip(f"{var}:Q", title="Calories")]
         ).properties(
-        title=f"{var} by Time",
+        title=f"{var} by Time (Selected Participants)",
         width=500
         )
         plot = ((indiv + band + avg) | legend) & selected
@@ -271,7 +271,8 @@ def run_vis_2(): # wyc
     plot
 
     st.write(f"Total number of participants with current variable: {len(uniqueId)}")
-    st.write(f"Number of participants selected: {len(participants)} <br>")
+    st.write(f"Number of participants selected: {len(participants)}")
+    st.write(" ")
     st.write("**Note:**")
     st.write("*Gray solid line:* total average of all participants;")
     st.write("*Light gray area:* one standard deviation of the average.")
