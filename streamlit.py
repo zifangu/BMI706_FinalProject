@@ -19,7 +19,8 @@ data_dict = {"Activity": "dailyActivity_merged.csv",
 
 
 def instruction_call():
-    st.write("Welcome. This product is made possible by April Yan, Ivan Gu, Marie Zhang, and Yuanchen Wang.")
+    st.write("# Welcome!")
+    st.write("This product is made possible by April Yan, Ivan Gu, Marie Zhang, and Yuanchen Wang.")
 
     st.sidebar.success("Choose any visualization to view content.")
     return
@@ -123,8 +124,10 @@ def run_vis_1():
     return
 
 
-def run_vis_2():
+def run_vis_2(): # wyc
     # time vs variables
+    st.write("## Variables vs. Time (Day)")
+
     lapse_name = "lapse"
     date_names = ["ActivityDay", "SleepDay", "ActivityDate", "Date"]
 
@@ -179,7 +182,11 @@ def run_vis_2():
         x=alt.X(lapse_name),
         y=alt.Y(var),
         color=alt.value('gray'),
-        tooltip=[f"{lapse_name}:O", f"{var}:N"]
+        tooltip=[alt.Tooltip(f"{lapse_name}:O", title="Time (Day)"), 
+        alt.Tooltip(f"{var}:N", title="Average Calories", format=",.2f"),
+        alt.Tooltip("sd", title="Standard Deviation", format=",.2f"),
+        alt.Tooltip("lower", title="Lower Bound", format=",.2f"),
+        alt.Tooltip("upper", title="Upper Bound", format=",.2f")]
     ).properties(
         width=600
     )
@@ -200,7 +207,7 @@ def run_vis_2():
     ).properties(
         title=""
     )
-    plot = (indiv + avg + band) | legend
+    plot = (indiv + band + avg) | legend
 
     plot
 
@@ -313,7 +320,7 @@ def main():
     vis_mode = st.sidebar.selectbox("Choose mode and visualization",
                                     ["Show Instructions",
                                      "Activities vs. Category",
-                                     "Activities vs. Time",
+                                     "Variables vs. Time",
                                      "Correlations",
                                      "Show the source code"])
 
@@ -324,7 +331,7 @@ def main():
         instruction_call()
     elif vis_mode == "Activities vs. Category":
         run_vis_1()
-    elif vis_mode == "Activities vs. Time":
+    elif vis_mode == "Variables vs. Time":
         run_vis_2()
     elif vis_mode == "Correlations":
         run_vis_3()
