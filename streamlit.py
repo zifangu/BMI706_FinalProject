@@ -55,13 +55,13 @@ def run_vis_1():
         var_cat = st.selectbox(f"Variables in {category}", category_var.columns.to_list()[3:])
         category_var = date_lapse(category_var, date_names=['SleepDay'])
         category_var = category_var.rename(columns={'SleepDay': 'ActivityDay'})
-        category_var = category_var.drop(columns=['lapse', 'TotalSleepRecords'])
-        category_var = category_var[['Id', 'ActivityDay', var_cat]]
+        #category_var = category_var.drop(columns=['lapse', 'TotalSleepRecords'])
+        category_var = category_var[['Id', 'ActivityDay', 'lapse', var_cat]]
     else:
         var_cat = "StepTotal"
         category_var = date_lapse(category_var, date_names=['ActivityDay'])
-        category_var = category_var.drop(columns=['lapse'])
-        category_var = category_var[['Id', 'ActivityDay', var_cat]]
+        #category_var = category_var.drop(columns=['lapse'])
+        category_var = category_var[['Id', 'ActivityDay','lapse', var_cat]]
     
     # daily_calories = pd.read_csv("https://raw.githubusercontent.com/qzhang21/BMI706_FinalProject/main/Data/dailyCalories_merged.csv")
     # daily_steps = pd.read_csv("https://raw.githubusercontent.com/qzhang21/BMI706_FinalProject/main/Data/dailySteps_merged.csv")
@@ -69,6 +69,7 @@ def run_vis_1():
     # merge files
     test_df = daily_activity.merge(
         category_var, on=["Id", "ActivityDay"])  # merge files
+
 
     # split the quantiles
     quantile_df = test_df.quantile(q=[0, .25, 0.50, 0.75, 1], axis = 0)
@@ -100,7 +101,7 @@ def run_vis_1():
     y_axis_val = test_df[var]
 
     # selection = alt.selection_multi(fields=['Quantile'], bind='legend')
-
+    st.write(test_df)
     # y_axis_val = test_df[activity]
 
     selection = alt.selection_single(fields=['Quantile'])
@@ -137,9 +138,9 @@ def run_vis_1():
     #subset = test_df[test_df["Quantile"] == selection]
     
     selection_id = alt.selection_multi(fields=['Id'],bind='legend')
-    chart2 = base.mark_line(strokeWidth=0.5).encode(
-        x = alt.X('ActivityDay'),
-        y = alt.Y(var, type="quantitative"),
+    chart2 = base.mark_point().encode(
+        x = alt.X('lapse',axis=alt.Axis(title="Time (Day)")),
+        y = alt.Y(var, type="quantitative", scale=alt.Scale(domain=[min(test_df[var]),max(test_df[var])])),
         color = alt.condition(selection_id, 'Id:N', alt.value('lightgray')),
         opacity=alt.condition(selection_id, alt.value(1.0), alt.value(0.2)),
         tooltip = ['ActivityDay',var]
