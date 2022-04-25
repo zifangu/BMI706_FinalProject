@@ -231,7 +231,7 @@ def run_vis_2(): # wyc
         alt.Tooltip("lower:Q", title="Lower Bound", format=",.2f"),
         alt.Tooltip("upper:Q", title="Upper Bound", format=",.2f")]
     ).properties(
-        width=600
+        width=500
     )
 
     band = alt.Chart(df_sum).mark_area().encode(
@@ -240,6 +240,8 @@ def run_vis_2(): # wyc
         y2='upper',
         color=alt.value('lightgray'),
         opacity=alt.value(0.2)
+    ).properties(
+        width=500
     )
 
 
@@ -251,7 +253,7 @@ def run_vis_2(): # wyc
         title="",
         width=20
     )
-    plot = (indiv + band + avg) | legend
+    plot = (indiv + band + avg) 
 
     if len(participants) != 0:
         selected = alt.Chart(df[df["selected"] == True]).mark_line(point=True).encode(
