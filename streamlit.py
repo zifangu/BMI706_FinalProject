@@ -232,7 +232,7 @@ def run_vis_2(): # wyc
         alt.Tooltip("lower:Q", title="Lower Bound", format=",.2f"),
         alt.Tooltip("upper:Q", title="Upper Bound", format=",.2f")]
     ).properties(
-        width=600
+        width=500
     )
 
     band = alt.Chart(df_sum).mark_area().encode(
@@ -241,6 +241,8 @@ def run_vis_2(): # wyc
         y2='upper',
         color=alt.value('lightgray'),
         opacity=alt.value(0.2)
+    ).properties(
+        width=500
     )
 
 
@@ -252,7 +254,7 @@ def run_vis_2(): # wyc
         title="",
         width=20
     )
-    plot = (indiv + band + avg) | legend
+    plot = (indiv + band + avg) 
 
     if len(participants) != 0:
         selected = alt.Chart(df[df["selected"] == True]).mark_line(point=True).encode(
@@ -260,19 +262,20 @@ def run_vis_2(): # wyc
             y=alt.Y(var, axis=alt.Axis(title=f"{var}")),
             color=color,
             opacity=alt.value(0.8),
-            tooltip=[alt.Tooltip("Id:N", title="Participant Id"),
+            tooltip=[alt.Tooltip("Id:N", title="Participant ID"),
                 alt.Tooltip(f"{lapse_name}:O", title="Time (Day)"), 
                 alt.Tooltip(f"{var}:Q", title="Calories")]
         ).properties(
-        title=f"{var} by Time",
+        title=f"{var} by Time: Selected Participant(s) only",
         width=500
         )
         plot = ((indiv + band + avg) | legend) & selected
     
     plot
 
-    st.write(f"Total number of participants with current variable: {len(uniqueId)}")
-    st.write(f"Number of participants selected: {len(participants)} <br>")
+    st.write(f"Total number of participants with current variable `{var}`: {len(uniqueId)}")
+    st.write(f"Number of participant(s) selected: {len(participants)}")
+    st.write(" ")
     st.write("**Note:**")
     st.write("*Gray solid line:* total average of all participants;")
     st.write("*Light gray area:* one standard deviation of the average.")
