@@ -6,7 +6,7 @@ import altair as alt
 import pandas as pd
 import numpy as np
 import os
-# from scipy import stats
+
 
 # https://github.com/streamlit/demo-self-driving
 
@@ -32,6 +32,9 @@ def instruction_call():
 
 def run_vis_1():
     # year = st.slider('Select Year', min(df['Year']), max(df['Year']), 2008)
+    st.sidebar.success("This module is used to visualize temporal trend of selected activities (e.g., calories, sedentary time) of a chosen categories (e.g., steps, sleep time).")
+    st.sidebar.success("The initial example shows four quantiles of daily steps of all participants. Click a single quantile, below shows the participants with steps falling in that quantile.")
+    st.sidebar.success("Click legend of the plot below to select multiple participants. You can observe the total calories comsumption at the days when participants have steps within speficic quantile.")
     activity = st.selectbox('Select Activity',["Calories", "Intensities"])
     var = activity
 
@@ -164,7 +167,9 @@ def run_vis_1():
     # #st.altair_chart(chart, use_container_width=True)
     st.write(f"{var_cat} Quantile")
     st.write("min:",min_cat,"25%:",q1,"50%:",q2,"75%:",q3,"max:",max_cat)
+    st.write("Click the quantile in the violin plot to select range/quantile of interest")
     st.altair_chart(chart3, use_container_width=True)
+    st.write("Click the legend in the scatter plot to select participants of interest")
 
     return
 
