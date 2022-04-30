@@ -3,7 +3,7 @@ import os
 
 # from turtle import color, width
 # from scipy import stats
-import scipy.stats
+import scipy.stats as stats
 # from pyparsing import oneOf
 import streamlit as st
 import altair as alt
