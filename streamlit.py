@@ -1,5 +1,5 @@
 import os
-os.system('conda install -r scipy altair numpy pandas')
+os.system('pip install -r requirements.txt')
 
 # from turtle import color, width
 from scipy import stats
