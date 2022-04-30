@@ -1,8 +1,9 @@
 import os
-os.system('pip install -r requirements.txt')
+# os.system('pip install -r requirements.txt')
 
 # from turtle import color, width
-from scipy import stats
+# from scipy import stats
+import scipy.stats
 # from pyparsing import oneOf
 import streamlit as st
 import altair as alt
