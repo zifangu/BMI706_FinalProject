@@ -1,6 +1,6 @@
-from turtle import color, width
+# from turtle import color, width
 from scipy import stats
-from pyparsing import oneOf
+# from pyparsing import oneOf
 import streamlit as st
 import altair as alt
 import pandas as pd
