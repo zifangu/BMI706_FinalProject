@@ -456,8 +456,7 @@ def main():
                                     ["Show Instructions",
                                      "Activities vs. Category",
                                      "Variables vs. Time",
-                                     "Correlations",
-                                     "Show the source code"])
+                                     "Correlations"])
 
     # initialize data
     # data_init()
