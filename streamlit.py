@@ -1,3 +1,6 @@
+import os
+os.system('pip install scipy altair numpy pandas')
+
 # from turtle import color, width
 from scipy import stats
 # from pyparsing import oneOf
@@ -5,7 +8,6 @@ import streamlit as st
 import altair as alt
 import pandas as pd
 import numpy as np
-import os
 
 
 # https://github.com/streamlit/demo-self-driving
